@@ -1,5 +1,8 @@
 #define _GNU_SOURCE
-#include <sched.h>
+#include <sched.h>          // Para CLONE_*
+#include <sys/types.h>      // Para pid_t
+#include <linux/sched.h>    // Contiene definiciones de CLONE_* en algunas distribuciones
+#include <sys/wait.h> 
 #include <sys/mman.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -10,7 +13,7 @@
 #define STACK_SIZE (1024 * 1024) // 1 MB
 
 typedef struct {
-    pid_t tid; // ID del hilo creado (thread ID)
+    pid_t tid; // PID real, ya no un thread ID
 } CEthread_t;
 
 typedef int (*CEthread_start_routine)(void *);
@@ -27,6 +30,21 @@ int thread_entry(void *void_args) {
     int result = args->func(args->arg);
     free(args); // liberamos memoria usada por argumentos
     return result;
+}
+
+int CEthread_join(CEthread_t thread) {
+    int status;
+    if (waitpid(thread.tid, &status, 0) == -1) {
+        perror("waitpid");
+        return -1;
+    }
+
+    // Opcional: verificar si terminó correctamente
+    if (WIFEXITED(status)) {
+        return WEXITSTATUS(status);
+    }
+
+    return -1;
 }
 
 int CEthread_create(CEthread_t *thread, void *(*start_routine)(void *), void *arg) {
@@ -51,7 +69,7 @@ int CEthread_create(CEthread_t *thread, void *(*start_routine)(void *), void *ar
     args->arg = arg;
 
     // Flags para simular un hilo (comparten memoria, archivos, señales)
-    int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD;
+    int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | SIGCHLD;
 
     // Crear hilo
     pid_t tid = clone(thread_entry, stack_top, flags, args);

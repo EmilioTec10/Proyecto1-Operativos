@@ -1,23 +1,40 @@
 #include <stdio.h>
 #include <unistd.h>
-#include "CEthreads.c" // o compílalo por separado
+#include <stdlib.h>
+#include "CEthreads.c"  // o usá #include "CEthreads.h" si lo separás
 
-void *hello(void *arg) {
-    int id = *(int *)arg;
-    printf("Hola desde el hilo %d (PID %d)\n", id, getpid());
+void *print_a(void *arg) {
+    for (int i = 0; i < 5; i++) {
+        printf("🅰️  Hilo A, iteración %d\n", i);
+        usleep(200000); // 200 ms
+    }
+    return NULL;
+}
+
+void *print_b(void *arg) {
+    for (int i = 0; i < 5; i++) {
+        printf("🅱️  Hilo B, iteración %d\n", i);
+        usleep(200000); // 200 ms
+    }
     return NULL;
 }
 
 int main() {
-    CEthread_t t1;
-    int id = 1;
+    CEthread_t thread1, thread2;
 
-    if (CEthread_create(&t1, hello, &id) != 0) {
-        fprintf(stderr, "Error creando CEthread\n");
+    if (CEthread_create(&thread1, print_a, NULL) != 0) {
+        perror("Error creando hilo A");
         return 1;
     }
 
-    sleep(1); // para que el hilo tenga tiempo de terminar
-    printf("Hilo creado con tid = %d\n", t1.tid);
+    if (CEthread_create(&thread2, print_b, NULL) != 0) {
+        perror("Error creando hilo B");
+        return 1;
+    }
+
+    CEthread_join(thread1);
+    CEthread_join(thread2);
+
+    printf("✅ Hilos finalizados\n");
     return 0;
 }
