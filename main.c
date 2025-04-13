@@ -1,40 +1,42 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include "CEthreads.c"  // o usá #include "CEthreads.h" si lo separás
+#include "CEthreads.c"  // Incluye todas tus funciones
 
-void *print_a(void *arg) {
-    for (int i = 0; i < 5; i++) {
-        printf("🅰️  Hilo A, iteración %d\n", i);
-        usleep(200000); // 200 ms
-    }
-    return NULL;
-}
+#define N 100000
 
-void *print_b(void *arg) {
-    for (int i = 0; i < 5; i++) {
-        printf("🅱️  Hilo B, iteración %d\n", i);
-        usleep(200000); // 200 ms
+int contador = 0;
+CEmutex_t lock;
+
+void *incrementar(void *arg) {
+    for (int i = 0; i < N; i++) {
+        CEmutex_lock(&lock);
+        contador++;
+        CEmutex_unlock(&lock);
     }
     return NULL;
 }
 
 int main() {
-    CEthread_t thread1, thread2;
+    CEthread_t t1, t2;
 
-    if (CEthread_create(&thread1, print_a, NULL) != 0) {
-        perror("Error creando hilo A");
-        return 1;
+    // Inicializar el mutex
+    CEmutex_init(&lock);
+
+    // Crear dos hilos
+    CEthread_create(&t1, incrementar, NULL);
+    CEthread_create(&t2, incrementar, NULL);
+
+    // Esperar a que terminen
+    CEthread_join(t1);
+    CEthread_join(t2);
+
+    // Mostrar resultado final
+    printf("✅ Contador final: %d (esperado: %d)\n", contador, 2 * N);
+
+    // Destruir el mutex
+    if (CEmutex_destroy(&lock) != 0) {
+        fprintf(stderr, "❌ Error al destruir el mutex\n");
     }
 
-    if (CEthread_create(&thread2, print_b, NULL) != 0) {
-        perror("Error creando hilo B");
-        return 1;
-    }
-
-    CEthread_join(thread1);
-    CEthread_join(thread2);
-
-    printf("✅ Hilos finalizados\n");
     return 0;
 }
