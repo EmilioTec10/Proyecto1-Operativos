@@ -115,28 +115,48 @@ CEthread_t scheduler_next_thread() {
             break;
 
         case SCHED_CE_RR:
-            // Round Robin: mantiene el orden FCFS pero solo ejecuta una parte
-            // (No implementado completamente, se usará el remaining_work en futuras versiones)
-            selected_index = 0;
-            printf("[scheduler] RR seleccionó el siguiente hilo en la cola\n");
-            break;
-
+            /* Round Robin: tomar el primero de la cola */
+                selected_index = 0;
+        printf("[scheduler] RR seleccionó hilo con %d unidades restantes\n",
+               ready_queue[0].remaining_work);
+        break;
         default:
             fprintf(stderr, "[scheduler] Algoritmo desconocido.\n");
-            exit(1);
+        exit(1);
     }
 
-    ScheduledThread next = ready_queue[selected_index];
+    ScheduledThread sel = ready_queue[selected_index];
 
-    // Eliminar el hilo seleccionado de la cola
-    for (int i = selected_index; i < queue_size - 1; ++i) {
-        ready_queue[i] = ready_queue[i + 1];
+    /* --- lógica específica RR ------------------------------------ */
+    if (current_mode == SCHED_CE_RR) {
+        /* Descontar quantum; si queda trabajo lo re‑encolamos al final */
+        sel.remaining_work -= CE_RR_QUANTUM;
+
+        if (sel.remaining_work > 0) {
+            /* mover al final de la cola con trabajo restante actualizado */
+            for (int i = selected_index; i < queue_size - 1; ++i)
+                ready_queue[i] = ready_queue[i + 1];
+
+            ready_queue[queue_size - 1] = sel;   /* re‑insertado al final */
+            /* NO cambiar queue_size */
+        } else {
+            /* trabajo terminado → quitar definitivamente */
+            for (int i = selected_index; i < queue_size - 1; ++i)
+                ready_queue[i] = ready_queue[i + 1];
+            queue_size--;
+        }
+    } else {
+        /* modos que no son RR: quitar de la cola */
+        for (int i = selected_index; i < queue_size - 1; ++i)
+            ready_queue[i] = ready_queue[i + 1];
+        queue_size--;
     }
-    queue_size--;
+    /* -------------------------------------------------------------- */
 
-    return next.thread;
+    return sel.thread;
 }
 
 int scheduler_has_threads() {
     return queue_size > 0;
 }
+
