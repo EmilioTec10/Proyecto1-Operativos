@@ -1,0 +1,11 @@
+# ninja log v6
+1	38	1745078940136277705	CMakeFiles/Proyecto1_Operativos.dir/main.c.o	ddda37897ad99b7a
+1	60	1745078940135277691	CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o	f033f5da5f7a864f
+2	79	1745078940136277705	CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o	a9a23cc708abe38c
+79	111	1745078940213278792	Proyecto1_Operativos	4285e9554afa8dd8
+2	46	1745079006141197727	CMakeFiles/Proyecto1_Operativos.dir/main.c.o	ddda37897ad99b7a
+46	81	1745079006185198332	Proyecto1_Operativos	4285e9554afa8dd8
+2	43	1745079507657647343	CMakeFiles/Proyecto1_Operativos.dir/main.c.o	ddda37897ad99b7a
+43	73	1745079507698647843	Proyecto1_Operativos	4285e9554afa8dd8
+2	45	1745079557755256452	CMakeFiles/Proyecto1_Operativos.dir/main.c.o	ddda37897ad99b7a
+45	79	1745079557798256973	Proyecto1_Operativos	4285e9554afa8dd8

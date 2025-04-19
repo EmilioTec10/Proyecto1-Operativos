@@ -1,0 +1,3 @@
+/home/henry/CLionProjects/Proyecto1-Operativos/cmake-build-debug/CMakeFiles/Proyecto1_Operativos.dir
+/home/henry/CLionProjects/Proyecto1-Operativos/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/henry/CLionProjects/Proyecto1-Operativos/cmake-build-debug/CMakeFiles/rebuild_cache.dir
