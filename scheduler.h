@@ -5,23 +5,25 @@
 #include "CEthreads.h"  // Para poder usar CEthread_t sin hacer un .h
 
 typedef enum {
-    SCHED_ALGO_FCFS,
-    SCHED_ALGO_SJF,
-    SCHED_ALGO_PRIORITY,
-    SCHED_ALGO_RR,
-    SCHED_ALGO_REALTIME
-} scheduler_algo_t;
+    SCHED_CE_FCFS,
+    SCHED_CE_SJF,
+    SCHED_CE_PRIORITY,
+    SCHED_CE_RR,
+    SCHED_CE_REALTIME
+} CE_scheduler_mode_t;
 
-
+// Estructura para representar cada hilo planificado
 typedef struct {
     CEthread_t thread;
-    int tiempo_estimado;
-    int prioridad;
-    int tiempo_llegada;
+    int estimated_time;     // tiempo estimado (para SJF)
+    int priority;           // prioridad (para PRIORITY)
+    int arrival_time;       // tiempo de llegada (para FCFS)
+    int remaining_work;     // trabajo pendiente (para RR)
+    int deadline;           // tiempo real (para REALTIME)
 } ScheduledThread;
 
-void scheduler_init(scheduler_algo_t algo);
-void scheduler_add_thread(CEthread_t thread, int tiempo_estimado, int prioridad);
+void scheduler_init(CE_scheduler_mode_t mode);
+void scheduler_add_thread(CEthread_t thread, int estimated_time, int priority, int deadline);
 CEthread_t scheduler_next_thread();
 int scheduler_has_threads();
 

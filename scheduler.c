@@ -8,15 +8,35 @@
 
 static ScheduledThread ready_queue[MAX_THREADS];
 static int queue_size = 0;
-static scheduler_algo_t current_algo;
+static CE_scheduler_mode_t current_mode;
 
-void scheduler_init(scheduler_algo_t algo) {
-    current_algo = algo;
+void scheduler_init(CE_scheduler_mode_t mode) {
+    current_mode = mode;
     queue_size = 0;
-    printf("[scheduler] Algoritmo inicializado: %d\n", algo);
+    printf("[scheduler] Algoritmo inicializado: ");
+
+    switch(mode) {
+        case SCHED_CE_FCFS:
+            printf("First-Come-First-Served (FCFS)\n");
+            break;
+        case SCHED_CE_SJF:
+            printf("Shortest Job First (SJF)\n");
+            break;
+        case SCHED_CE_PRIORITY:
+            printf("Priority\n");
+            break;
+        case SCHED_CE_RR:
+            printf("Round Robin (RR)\n");
+            break;
+        case SCHED_CE_REALTIME:
+            printf("Real Time\n");
+            break;
+        default:
+            printf("Desconocido\n");
+    }
 }
 
-void scheduler_add_thread(CEthread_t thread, int tiempo_estimado, int prioridad) {
+void scheduler_add_thread(CEthread_t thread, int estimated_time, int priority, int deadline) {
     if (queue_size >= MAX_THREADS) {
         fprintf(stderr, "[scheduler] ¡Cola llena!\n");
         return;
@@ -24,9 +44,11 @@ void scheduler_add_thread(CEthread_t thread, int tiempo_estimado, int prioridad)
 
     ScheduledThread st;
     st.thread = thread;
-    st.tiempo_estimado = tiempo_estimado;
-    st.prioridad = prioridad;
-    st.tiempo_llegada = time(NULL); // Usado solo para FCFS
+    st.estimated_time = estimated_time;
+    st.priority = priority;
+    st.arrival_time = time(NULL);  // usado para FCFS y tiempo real
+    st.remaining_work = estimated_time;  // usado para RR
+    st.deadline = deadline;  // usado para tiempo real
 
     ready_queue[queue_size++] = st;
     printf("[scheduler] Hilo agregado a la cola. Total: %d\n", queue_size);
@@ -38,13 +60,78 @@ CEthread_t scheduler_next_thread() {
         exit(1);
     }
 
-    // FCFS: devolver el primer hilo en entrar
-    ScheduledThread next = ready_queue[0];
+    int selected_index = 0;
 
-    for (int i = 1; i < queue_size; ++i) {
-        ready_queue[i - 1] = ready_queue[i];
+    switch (current_mode) {
+        case SCHED_CE_FCFS:
+            // FCFS: el que llegó primero (índice 0 en la cola)
+            selected_index = 0;
+            printf("[scheduler] FCFS seleccionó el hilo más antiguo\n");
+            break;
+
+        case SCHED_CE_SJF:
+            // SJF: el que tenga menor estimated_time
+            {
+                int min_time = ready_queue[0].estimated_time;
+                for (int i = 1; i < queue_size; ++i) {
+                    if (ready_queue[i].estimated_time < min_time) {
+                        min_time = ready_queue[i].estimated_time;
+                        selected_index = i;
+                    }
+                }
+                printf("[scheduler] SJF seleccionó hilo con tiempo estimado: %d\n",
+                       ready_queue[selected_index].estimated_time);
+            }
+            break;
+
+        case SCHED_CE_PRIORITY:
+            // Priority: el que tenga mayor prioridad
+            {
+                int max_priority = ready_queue[0].priority;
+                for (int i = 1; i < queue_size; ++i) {
+                    if (ready_queue[i].priority > max_priority) {
+                        max_priority = ready_queue[i].priority;
+                        selected_index = i;
+                    }
+                }
+                printf("[scheduler] PRIORITY seleccionó hilo con prioridad: %d\n",
+                       ready_queue[selected_index].priority);
+            }
+            break;
+
+        case SCHED_CE_REALTIME:
+            // Real-time: el que tenga el deadline más cercano
+            {
+                int min_deadline = ready_queue[0].deadline;
+                for (int i = 1; i < queue_size; ++i) {
+                    if (ready_queue[i].deadline < min_deadline) {
+                        min_deadline = ready_queue[i].deadline;
+                        selected_index = i;
+                    }
+                }
+                printf("[scheduler] REALTIME seleccionó hilo con deadline: %d\n",
+                       ready_queue[selected_index].deadline);
+            }
+            break;
+
+        case SCHED_CE_RR:
+            // Round Robin: mantiene el orden FCFS pero solo ejecuta una parte
+            // (No implementado completamente, se usará el remaining_work en futuras versiones)
+            selected_index = 0;
+            printf("[scheduler] RR seleccionó el siguiente hilo en la cola\n");
+            break;
+
+        default:
+            fprintf(stderr, "[scheduler] Algoritmo desconocido.\n");
+            exit(1);
     }
 
+    ScheduledThread next = ready_queue[selected_index];
+
+    // Eliminar el hilo seleccionado de la cola
+    for (int i = selected_index; i < queue_size - 1; ++i) {
+        ready_queue[i] = ready_queue[i + 1];
+    }
     queue_size--;
 
     return next.thread;
