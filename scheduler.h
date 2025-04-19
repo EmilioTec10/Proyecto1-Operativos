@@ -13,18 +13,23 @@ typedef enum {
 } CE_scheduler_mode_t;
 
 // Estructura para representar cada hilo planificado
-typedef struct {
+typedef struct {            /* igual que antes */
     CEthread_t thread;
-    int estimated_time;     // tiempo estimado (para SJF)
-    int priority;           // prioridad (para PRIORITY)
-    int arrival_time;       // tiempo de llegada (para FCFS)
-    int remaining_work;     // trabajo pendiente (para RR)
-    int deadline;           // tiempo real (para REALTIME)
+    int estimated_time;
+    int priority;
+    int arrival_time;
+    int remaining_work;
+    int deadline;
 } ScheduledThread;
+
+/* ───── NUEVO: tamaño de quantum RR (en “unidades” de run_thread) ─── */
+#define CE_RR_QUANTUM 5
 
 void scheduler_init(CE_scheduler_mode_t mode);
 void scheduler_add_thread(CEthread_t thread, int estimated_time, int priority, int deadline);
 CEthread_t scheduler_next_thread();
 int scheduler_has_threads();
+void scheduler_rr_report(pid_t tid, int unidades);
+
 
 #endif

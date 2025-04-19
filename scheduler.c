@@ -115,28 +115,59 @@ CEthread_t scheduler_next_thread() {
             break;
 
         case SCHED_CE_RR:
-            // Round Robin: mantiene el orden FCFS pero solo ejecuta una parte
-            // (No implementado completamente, se usará el remaining_work en futuras versiones)
-            selected_index = 0;
-            printf("[scheduler] RR seleccionó el siguiente hilo en la cola\n");
-            break;
-
+            /* Round Robin: tomar el primero de la cola */
+                selected_index = 0;
+        printf("[scheduler] RR seleccionó hilo con %d unidades restantes\n",
+               ready_queue[0].remaining_work);
+        break;
         default:
             fprintf(stderr, "[scheduler] Algoritmo desconocido.\n");
-            exit(1);
+        exit(1);
     }
 
-    ScheduledThread next = ready_queue[selected_index];
+    ScheduledThread sel = ready_queue[selected_index];
 
-    // Eliminar el hilo seleccionado de la cola
-    for (int i = selected_index; i < queue_size - 1; ++i) {
-        ready_queue[i] = ready_queue[i + 1];
+    /* --- lógica específica RR ------------------------------------ */
+    if (current_mode == SCHED_CE_RR) {
+
+        /* si aún queda trabajo después del aviso del hilo… */
+        if (sel.remaining_work > 0) {
+            /* mover al final de la cola */
+            for (int i = selected_index; i < queue_size - 1; ++i)
+                ready_queue[i] = ready_queue[i + 1];
+            ready_queue[queue_size - 1] = sel;
+            /* queue_size no cambia */
+        } else {
+            /* terminó: quitar definitivamente */
+            for (int i = selected_index; i < queue_size - 1; ++i)
+                ready_queue[i] = ready_queue[i + 1];
+            queue_size--;
+        }
     }
-    queue_size--;
+    else {
+        /* modos que no son RR: quitar de la cola */
+        for (int i = selected_index; i < queue_size - 1; ++i)
+            ready_queue[i] = ready_queue[i + 1];
+        queue_size--;
+    }
+    /* -------------------------------------------------------------- */
 
-    return next.thread;
+    return sel.thread;
 }
 
 int scheduler_has_threads() {
     return queue_size > 0;
+}
+
+/* ---- SOLO PARA Round‑Robin --------------------------------------- */
+void scheduler_rr_report(pid_t tid, int unidades)
+{
+    if (current_mode != SCHED_CE_RR) return;
+
+    for (int i = 0; i < queue_size; ++i) {
+        if (ready_queue[i].thread.tid == tid) {
+            ready_queue[i].remaining_work -= unidades;
+            break;
+        }
+    }
 }

@@ -1,119 +1,127 @@
 // main.c - Driver para el scheduler
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+
 #include "CEthreads.h"
 #include "scheduler.h"
 
+#define QUANTUM 5
+
 typedef struct {
-    int work;              // unidades de trabajo a ejecutar
-    int id;                // id lógico solo para imprimir
-    int priority;          // prioridad para el scheduler PRIORITY
-    int deadline;          // parámetro de tiempo-real
-    CEmutex_t start_lock;  // mutex usado como barrera de arranque
+    int work;
+    int id;
+    int priority;
+    int deadline;
+    int work_done;
+    int is_rr_mode;
+    CEmutex_t start_lock;
+    CEmutex_t pause_lock;  // Solo usado en RR
 } ThreadContext;
 
-int counter = 0;           // recurso compartido
-CEmutex_t global_lock;     // protege 'counter'
+int counter = 0;
+CEmutex_t global_lock;
 
-// --- la función del hilo --------------------------------------------
 void *run_thread(void *arg)
 {
     ThreadContext *ctx = (ThreadContext *)arg;
 
-    /* Esperar hasta que main libere el start_lock */
-    CEmutex_lock(&ctx->start_lock);      // se desbloqueará desde main
-    CEmutex_unlock(&ctx->start_lock);    // lo liberamos enseguida
+    /* esperar señal de inicio */
+    CEmutex_lock(&ctx->start_lock);
+    CEmutex_unlock(&ctx->start_lock);
 
-    printf("🧵 Thread %d ejecutando %d unidades (Priority=%d, DL=%d)\n",
-           ctx->id, ctx->work, ctx->priority, ctx->deadline);
+    while (ctx->work_done < ctx->work) {
 
-    for (int i = 0; i < ctx->work; ++i) {
-        CEmutex_lock(&global_lock);
-        counter++;
-        CEmutex_unlock(&global_lock);
+        /* --- ejecutar UN quantum o lo que falte --- */
+        int unidades = (ctx->work - ctx->work_done < QUANTUM)
+                       ? (ctx->work - ctx->work_done)
+                       : QUANTUM;
+
+        for (int i = 0; i < unidades; ++i) {
+            CEmutex_lock(&global_lock);
+            counter++;
+            ctx->work_done++;
+            CEmutex_unlock(&global_lock);
+        }
+
+        /* avisar al scheduler cuántas unidades hicimos en este turno (solo RR) */
+        if (ctx->is_rr_mode)
+            scheduler_rr_report(getpid(), unidades);
+
+        /* si queda trabajo y esto es RR, pausar hasta el siguiente turno */
+        if (ctx->is_rr_mode && ctx->work_done < ctx->work)
+            CEmutex_lock(&ctx->pause_lock);
     }
 
     printf("✅ Thread %d completado\n", ctx->id);
     return NULL;
 }
 
+
 void run_test(CE_scheduler_mode_t mode)
 {
-    /* 1. Inicializar el scheduler en el modo especificado */
     scheduler_init(mode);
     counter = 0;
     CEmutex_init(&global_lock);
 
-    /* 2. Crear contextos con diferentes parámetros */
-    ThreadContext c1 = {.work = 6, .id = 1, .priority = 3, .deadline = 10};
-    ThreadContext c2 = {.work = 4, .id = 2, .priority = 5, .deadline = 5};
-    ThreadContext c3 = {.work = 3, .id = 3, .priority = 2, .deadline = 7};
+    ThreadContext c1 = {.work = 66, .id = 1, .priority = 3, .deadline = 10};
+    ThreadContext c2 = {.work = 19, .id = 2, .priority = 5, .deadline = 5};
+    ThreadContext c3 = {.work = 10, .id = 3, .priority = 2, .deadline = 7};
 
-    /* 3. Inicializar y BLOQUEAR el start_lock de cada hilo */
-    CEmutex_init(&c1.start_lock);  CEmutex_lock(&c1.start_lock);
-    CEmutex_init(&c2.start_lock);  CEmutex_lock(&c2.start_lock);
-    CEmutex_init(&c3.start_lock);  CEmutex_lock(&c3.start_lock);
+    ThreadContext *contexts[] = {&c1, &c2, &c3};
+    CEthread_t threads[3];
 
-    /* 4. Crear hilos (quedarán dormidos en su start_lock) */
-    CEthread_t t1, t2, t3;
-    CEthread_create(&t1, run_thread, &c1);
-    CEthread_create(&t2, run_thread, &c2);
-    CEthread_create(&t3, run_thread, &c3);
-
-    /* 5. Registrar en el scheduler (aún no corren) */
-    scheduler_add_thread(t1, c1.work, c1.priority, c1.deadline);
-    scheduler_add_thread(t2, c2.work, c2.priority, c2.deadline);
-    scheduler_add_thread(t3, c3.work, c3.priority, c3.deadline);
-
-    printf("\n===== Iniciando ejecución con algoritmo ");
-    switch(mode) {
-        case SCHED_CE_FCFS: printf("FCFS =====\n"); break;
-        case SCHED_CE_SJF: printf("SJF =====\n"); break;
-        case SCHED_CE_PRIORITY: printf("PRIORITY =====\n"); break;
-        case SCHED_CE_REALTIME: printf("REALTIME =====\n"); break;
-        case SCHED_CE_RR: printf("RR =====\n"); break;
-        default: printf("DESCONOCIDO =====\n");
+    for (int i = 0; i < 3; ++i) {
+        contexts[i]->work_done = 0;
+        contexts[i]->is_rr_mode = (mode == SCHED_CE_RR);
+        CEmutex_init(&contexts[i]->start_lock);
+        CEmutex_lock(&contexts[i]->start_lock);
+        if (mode == SCHED_CE_RR) {
+            CEmutex_init(&contexts[i]->pause_lock);
+            CEmutex_lock(&contexts[i]->pause_lock);
+        }
+        CEthread_create(&threads[i], run_thread, contexts[i]);
+        scheduler_add_thread(threads[i], contexts[i]->work, contexts[i]->priority, contexts[i]->deadline);
     }
 
-    /* 6. Bucle principal: el scheduler decide el orden */
+    printf("\n===== Iniciando ejecución con algoritmo %s =====\n",
+           mode == SCHED_CE_RR ? "RR" : "Otro");
+
     while (scheduler_has_threads()) {
-        /* 6.1 Seleccionar el próximo hilo según el algoritmo configurado */
         CEthread_t next = scheduler_next_thread();
-
-        /* 6.2 Determinar qué contexto corresponde */
         ThreadContext *ctx = NULL;
-        if (next.tid == t1.tid) ctx = &c1;
-        else if (next.tid == t2.tid) ctx = &c2;
-        else if (next.tid == t3.tid) ctx = &c3;
-
-        /* 6.3 Autorizar al hilo a correr */
+        for (int i = 0; i < 3; ++i) {
+            if (threads[i].tid == next.tid) {
+                ctx = contexts[i];
+                break;
+            }
+        }
         CEmutex_unlock(&ctx->start_lock);
-
-        /* 6.4 Esperar a que termine su trabajo completo */
-        CEthread_join(next);
+        if (mode == SCHED_CE_RR && ctx->work_done < ctx->work) {
+            CEmutex_unlock(&ctx->pause_lock);
+        } else {
+            CEthread_join(next);
+        }
     }
 
     printf("\n✅ Counter final: %d (esperado: %d)\n",
            counter, c1.work + c2.work + c3.work);
 
-    /* Limpieza */
     CEmutex_destroy(&global_lock);
-    CEmutex_destroy(&c1.start_lock);
-    CEmutex_destroy(&c2.start_lock);
-    CEmutex_destroy(&c3.start_lock);
+    for (int i = 0; i < 3; ++i) {
+        CEmutex_destroy(&contexts[i]->start_lock);
+        if (mode == SCHED_CE_RR) CEmutex_destroy(&contexts[i]->pause_lock);
+    }
 }
 
 int main(void)
 {
     printf("\n======= PRUEBA DE ALGORITMOS DE PLANIFICACIÓN =======\n");
-
-    // Prueba todos los algoritmos implementados
-    // run_test(SCHED_CE_FCFS);     // First-Come-First-Served
-    // run_test(SCHED_CE_SJF);      // Shortest Job First
-    // run_test(SCHED_CE_PRIORITY); // Priority
-     run_test(SCHED_CE_REALTIME); // Real Time
-    // run_test(SCHED_CE_RR);    // Round Robin
-    
+    // run_test(SCHED_CE_FCFS);
+    // run_test(SCHED_CE_SJF);
+    // run_test(SCHED_CE_PRIORITY);
+    // run_test(SCHED_CE_REALTIME);
+     run_test(SCHED_CE_RR);
     printf("\n======= PRUEBAS COMPLETADAS =======\n");
     return 0;
 }
