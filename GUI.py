@@ -3,10 +3,10 @@ import sys
 
 # Constants
 WIDTH, HEIGHT = 800, 600
-CAR_WIDTH, CAR_HEIGHT = 100, 60
-LEFT_START_X = 50
-RIGHT_START_X = WIDTH - CAR_WIDTH - 50
-CAR_SPACING = 65  # spacing between cars
+CAR_WIDTH, CAR_HEIGHT = 120, 80
+LEFT_START_X = 10
+RIGHT_START_X = WIDTH - CAR_WIDTH
+CAR_SPACING = 120  # spacing between cars
 CARS_PER_SIDE = 5
 
 WHITE = (255, 255, 255)
@@ -20,10 +20,6 @@ def load_car_image(path, flip=False):
         image = pygame.transform.flip(image, True, False)
     return image
 
-def draw_road(surface):
-    """Draw the road in the middle of the screen."""
-    road_rect = pygame.Rect(0, HEIGHT // 2 - 40, WIDTH, 80)
-    pygame.draw.rect(surface, ROAD_COLOR, road_rect)
 
 def main():
     pygame.init()
@@ -37,7 +33,7 @@ def main():
     car_left_image = load_car_image("images/car1_right.png", flip=True)
 
     # Vertical alignment: fit cars above and below the road
-    road_top_y = HEIGHT // 2 - 40
+    road_top_y = HEIGHT - 30
     road_bottom_y = HEIGHT // 2 + 40
 
     # Generate car positions
@@ -65,7 +61,6 @@ def main():
 
         # Draw background and road
         screen.fill(ROAD_COLOR)
-        draw_road(screen)
 
         # Draw left cars
         for pos in left_cars:
