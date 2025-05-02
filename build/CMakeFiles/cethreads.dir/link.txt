@@ -1,0 +1,1 @@
+/usr/bin/cc -fPIC -shared -Wl,-soname,libcethreads.so -o libcethreads.so CMakeFiles/cethreads.dir/CEthreads.c.o CMakeFiles/cethreads.dir/scheduler.c.o CMakeFiles/cethreads.dir/simulator.c.o

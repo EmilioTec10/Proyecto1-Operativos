@@ -105,13 +105,12 @@ void run_test(CE_scheduler_mode_t mode)
 
 int main(void)
 {
-    printf("\n======= PRUEBA DE ALGORITMOS DE PLANIFICACIÓN =======\n");
 
     // Prueba todos los algoritmos implementados
-    // run_test(SCHED_CE_FCFS);     // First-Come-First-Served
+    run_test(SCHED_CE_FCFS);     // First-Come-First-Served
     // run_test(SCHED_CE_SJF);      // Shortest Job First
     // run_test(SCHED_CE_PRIORITY); // Priority
-     run_test(SCHED_CE_REALTIME); // Real Time
+    // run_test(SCHED_CE_REALTIME); // Real Time
     // run_test(SCHED_CE_RR);    // Round Robin
     
     printf("\n======= PRUEBAS COMPLETADAS =======\n");

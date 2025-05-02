@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/Proyecto1_Operativos.dir/main.c.o -o Proyecto1_Operativos  -Wl,-rpath,/home/kun/Documentos/Operativos/Proyecto/Proyecto1-Operativos/build libcethreads.so

@@ -1,0 +1,15 @@
+{
+    "mode": "FCFS",             
+    "street_length": 1000,
+    "speed_base": 5,
+    "sign_interval": 10,
+    "W": 3,
+    "cars": [
+      {"side": "left",  "type": "normal"},
+      {"side": "right", "type": "sport"},
+      {"side": "left",  "type": "emergency"},
+      {"side": "left",  "type": "normal"},
+      {"side": "right", "type": "normal"}
+    ]
+  }
+  

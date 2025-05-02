@@ -1,0 +1,4 @@
+/home/kun/Documentos/Operativos/Proyecto/Proyecto1-Operativos/CMakeFiles/cethreads.dir
+/home/kun/Documentos/Operativos/Proyecto/Proyecto1-Operativos/CMakeFiles/Proyecto1_Operativos.dir
+/home/kun/Documentos/Operativos/Proyecto/Proyecto1-Operativos/CMakeFiles/edit_cache.dir
+/home/kun/Documentos/Operativos/Proyecto/Proyecto1-Operativos/CMakeFiles/rebuild_cache.dir
