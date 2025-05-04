@@ -10,4 +10,6 @@ add_executable(Proyecto1_Operativos
     CEthreads.h
     main.c
     scheduler.c
-    scheduler.h)
+    scheduler.h
+    planner.c
+    planner.h)

@@ -1,8 +1,7 @@
-// scheduler.h
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include "CEthreads.h"  // Para poder usar CEthread_t sin hacer un .h
+#include "CEthreads.h"
 
 typedef enum {
     SCHED_CE_FCFS,
@@ -12,24 +11,24 @@ typedef enum {
     SCHED_CE_REALTIME
 } CE_scheduler_mode_t;
 
-// Estructura para representar cada hilo planificado
-typedef struct {            /* igual que antes */
+typedef struct {
     CEthread_t thread;
     int estimated_time;
     int priority;
-    int arrival_time;
     int remaining_work;
     int deadline;
+    int arrival_time;
 } ScheduledThread;
 
-/* ───── NUEVO: tamaño de quantum RR (en “unidades” de run_thread) ─── */
-#define CE_RR_QUANTUM 5
+#define CE_RR_QUANTUM  5
 
-void scheduler_init(CE_scheduler_mode_t mode);
-void scheduler_add_thread(CEthread_t thread, int estimated_time, int priority, int deadline);
-CEthread_t scheduler_next_thread();
-int scheduler_has_threads();
-void scheduler_rr_report(pid_t tid, int unidades);
-
+void  scheduler_init(CE_scheduler_mode_t mode);
+void  scheduler_add_thread(CEthread_t thread,
+                           int estimated_time,
+                           int priority,
+                           int deadline);
+CEthread_t scheduler_next_thread(void);
+int   scheduler_has_threads(void);
+void  scheduler_rr_report(pid_t tid,int unidades);
 
 #endif
