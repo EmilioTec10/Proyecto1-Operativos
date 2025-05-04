@@ -159,7 +159,7 @@ int scheduler_has_threads() {
     return queue_size > 0;
 }
 
-/* ---- SOLO PARA Round‑Robin -------------------------------------- */
+/* ---- SOLO PARA Round‑Robin ----------------------------------- */
 void scheduler_rr_report(pid_t tid, int unidades)
 {
     if (current_mode != SCHED_CE_RR) return;
