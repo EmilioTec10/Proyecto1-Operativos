@@ -6,14 +6,11 @@
 #include "CEthreads.h"
 #include "scheduler.h"
 
-typedef enum { IZQUIERDA, DERECHA } Lado;
-
 typedef struct {
     CE_Job    job;          // ya estaba
     int       done;
     int       quantum;
     int       is_rr;
-    Lado      origen;       // 👈 NUEVO: indica el lado del carro
     CEmutex_t start_lock;
     CEmutex_t pause_lock;
     CEmutex_t permiso_paso; // 👈 NUEVO: semáforo para autorizar cruce
