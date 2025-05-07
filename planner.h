@@ -9,6 +9,7 @@ typedef struct {
     int id;         /* solo para imprimir */
     int priority;   /* usado en PRIORITY  */
     int deadline;   /* usado en REALTIME  */
+    int from_left;  /* 1 si viene de la izquierda, 0 si de la derecha */
 } CE_Job;
 
 /* Lanza todos los hilos, configura el scheduler y espera a que terminen.
@@ -17,6 +18,6 @@ typedef struct {
    - mode   : algoritmo (FCFS / SJF / … / RR)
    - q      : quantum para RR (ignorado en otros modos) */
 void ce_run_plan(const CE_Job jobs[], int n,
-                 CE_scheduler_mode_t mode, int q);
+                 CE_scheduler_mode_t mode, int q, int W);
 
 #endif

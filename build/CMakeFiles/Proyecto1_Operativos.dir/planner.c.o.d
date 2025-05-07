@@ -59,4 +59,5 @@ CMakeFiles/Proyecto1_Operativos.dir/planner.c.o: \
  /usr/include/strings.h \
  /home/emilio/Documents/Proyecto1-Operativos/planner.h \
  /home/emilio/Documents/Proyecto1-Operativos/CEthreads.h \
- /home/emilio/Documents/Proyecto1-Operativos/scheduler.h
+ /home/emilio/Documents/Proyecto1-Operativos/scheduler.h \
+ /home/emilio/Documents/Proyecto1-Operativos/flow_equity.h

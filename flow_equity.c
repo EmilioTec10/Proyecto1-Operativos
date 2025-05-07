@@ -26,7 +26,7 @@ void equity_init(int w_param) {
 
 void equity_request_pass(int from_left) {
     int my_dir = from_left ? 0 : 1;
-    pid_t my_tid = getpid();  // identificador del hilo (como proceso hijo)
+    pid_t tid = getpid();
 
     CEmutex_lock(&lock);
     if (from_left)
@@ -38,19 +38,20 @@ void equity_request_pass(int from_left) {
     while (1) {
         CEmutex_lock(&lock);
 
-        int can_pass = 0;
-        int opposite_waiting = (my_dir == 0) ? waiting_right : waiting_left;
-        int current_waiting  = (my_dir == 0) ? waiting_left : waiting_right;
+        int current_waiting = (current_dir == 0) ? waiting_left : waiting_right;
+        int opposite_waiting = (current_dir == 0) ? waiting_right : waiting_left;
 
-        // Cambiar dirección si se completó el lote o no hay más en la dirección actual
+       
         if (crossing == 0 && passed >= w) {
             if (opposite_waiting > 0 || current_waiting == 0) {
                 current_dir = 1 - current_dir;
                 passed = 0;
-                printf("🔁 Cambiando dirección: ahora %s\n",
+                printf("🔁 [DEBUG] Cambio de dirección forzado → ahora %s\n",
                        current_dir == 0 ? "Izquierda -> Derecha" : "Derecha -> Izquierda");
             }
         }
+
+        int can_pass = 0;
 
         if (current_dir == my_dir && passed < w) {
             can_pass = 1;
@@ -61,6 +62,10 @@ void equity_request_pass(int from_left) {
             crossing++;
             if (from_left) waiting_left--;
             else waiting_right--;
+
+            printf("✅ [TID %d] ENTRA a cruzar desde %s\n", tid,
+                   from_left ? "Izquierda" : "Derecha");
+
             CEmutex_unlock(&lock);
             break;
         }
@@ -69,7 +74,6 @@ void equity_request_pass(int from_left) {
         usleep(1000);
     }
 }
-
 
 void equity_leave() {
     CEmutex_lock(&lock);
