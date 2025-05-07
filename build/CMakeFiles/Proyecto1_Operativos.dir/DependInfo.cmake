@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/emilio/Documents/Proyecto1-Operativos/CEthreads.c" "CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o.d"
+  "/home/emilio/Documents/Proyecto1-Operativos/flow_equity.c" "CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o.d"
   "/home/emilio/Documents/Proyecto1-Operativos/main.c" "CMakeFiles/Proyecto1_Operativos.dir/main.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/main.c.o.d"
   "/home/emilio/Documents/Proyecto1-Operativos/planner.c" "CMakeFiles/Proyecto1_Operativos.dir/planner.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/planner.c.o.d"
   "/home/emilio/Documents/Proyecto1-Operativos/scheduler.c" "CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o.d"

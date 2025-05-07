@@ -153,6 +153,30 @@ CEthreads.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Proyecto1_Operativos.dir/build.make CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.s
 .PHONY : CEthreads.c.s
 
+flow_equity.o: flow_equity.c.o
+.PHONY : flow_equity.o
+
+# target to build an object file
+flow_equity.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Proyecto1_Operativos.dir/build.make CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o
+.PHONY : flow_equity.c.o
+
+flow_equity.i: flow_equity.c.i
+.PHONY : flow_equity.i
+
+# target to preprocess a source file
+flow_equity.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Proyecto1_Operativos.dir/build.make CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.i
+.PHONY : flow_equity.c.i
+
+flow_equity.s: flow_equity.c.s
+.PHONY : flow_equity.s
+
+# target to generate assembly for a file
+flow_equity.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Proyecto1_Operativos.dir/build.make CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.s
+.PHONY : flow_equity.c.s
+
 main.o: main.c.o
 .PHONY : main.o
 
@@ -237,6 +261,9 @@ help:
 	@echo "... CEthreads.o"
 	@echo "... CEthreads.i"
 	@echo "... CEthreads.s"
+	@echo "... flow_equity.o"
+	@echo "... flow_equity.i"
+	@echo "... flow_equity.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
