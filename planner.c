@@ -13,6 +13,7 @@ typedef struct {
     int       quantum;
     int       is_rr;
     int from_left; // 1 si viene de la izquierda, 0 si de la derecha
+    int terminado; 
     CEmutex_t start_lock;
     CEmutex_t pause_lock;
     CEmutex_t permiso_paso; // 👈 NUEVO: semáforo para autorizar cruce
@@ -110,65 +111,87 @@ void ce_run_plan(const CE_Job jobs[], int n,
     scheduler_init(mode);
     g_counter = 0;
     CEmutex_init(&g_lock);
-
     CEmutex_init(&print_lock);
 
     WorkerCtx *ctx = calloc(n, sizeof(*ctx));
     CEthread_t *thr = calloc(n, sizeof(*thr));
 
     if (modo_flujo_equity) {
-        equity_init(W);  
-    }    
+        equity_init(W);
+    }
 
     /* ---- crear todos los hilos dormidos y registrarlos ------------- */
     for (int i = 0; i < n; ++i) {
-        ctx[i].job     = jobs[i];
-        ctx[i].done    = 0;
-        ctx[i].quantum = quantum_rr;
-        ctx[i].is_rr   = (mode == SCHED_CE_RR);
-        ctx[i].from_left = jobs[i].from_left; // 1 si viene de la izquierda, 0 si de la derecha
+        ctx[i].job        = jobs[i];
+        ctx[i].done       = 0;
+        ctx[i].quantum    = quantum_rr;
+        ctx[i].is_rr      = (mode == SCHED_CE_RR);
+        ctx[i].from_left  = jobs[i].from_left;
+        ctx[i].terminado  = 0;
 
-        // Inicialización de semáforo para permiso de paso
         CEmutex_init(&ctx[i].permiso_paso);
-        CEmutex_lock(&ctx[i].permiso_paso);  // empieza bloqueado, espera luz verde
+        CEmutex_lock(&ctx[i].permiso_paso);
 
+        CEmutex_init(&ctx[i].start_lock);
+        CEmutex_lock(&ctx[i].start_lock);
 
-        CEmutex_init(&ctx[i].start_lock);  CEmutex_lock(&ctx[i].start_lock);
-        if (ctx[i].is_rr) { CEmutex_init(&ctx[i].pause_lock);
-                            CEmutex_lock(&ctx[i].pause_lock); }
+        if (ctx[i].is_rr) {
+            CEmutex_init(&ctx[i].pause_lock);
+            CEmutex_lock(&ctx[i].pause_lock);
+        }
+
+        printf("[DEBUG] Creando hilo %d (ID %d, from_left = %d)\n",
+               i, jobs[i].id, jobs[i].from_left);
 
         CEthread_create(&thr[i], worker, &ctx[i]);
+
         scheduler_add_thread(thr[i],
                              ctx[i].job.work,
                              ctx[i].job.priority,
                              ctx[i].job.deadline);
     }
 
-    /*  ---- ciclo principal ------------------------------------------- */
-    while (scheduler_has_threads()) {
-        CEthread_t next = scheduler_next_thread();
+    if (modo_flujo_equity) {
+        // --- NUEVO: planificación por lote por lado ---
+        int lado = 1; // 1 = izquierda, 0 = derecha
+        int hilos_terminados = 0;
 
-        /* localizar contexto */
-        WorkerCtx *c = NULL;
-        for (int i = 0; i < n; ++i)
-            if (thr[i].tid == next.tid) { c = &ctx[i]; break; }
+        while (hilos_terminados < n) {
+            int lote = 0;
 
-        /* ► Permitir que arranque (solo la 1.ª vez) */
-        CEmutex_unlock(&c->start_lock);
+            for (int i = 0; i < n && lote < W; ++i) {
+                if (!ctx[i].terminado && ctx[i].from_left == lado) {
+                    CEmutex_unlock(&ctx[i].start_lock);
+                    CEthread_join(thr[i]);
+                    ctx[i].terminado = 1;
+                    hilos_terminados++;
+                    lote++;
+                }
+            }
 
-        if (c->is_rr) {
-            /* ► Despertar un quantum */
-            CEmutex_unlock(&c->pause_lock);
+            lado = 1 - lado;
+        }
 
-            /* Si acaba de terminar, esperar su fin real           */
-            if (c->done >= c->job.work)
+    } else {
+        // 🔁 lógica original para otros algoritmos
+        while (scheduler_has_threads()) {
+            CEthread_t next = scheduler_next_thread();
+
+            WorkerCtx *c = NULL;
+            for (int i = 0; i < n; ++i)
+                if (thr[i].tid == next.tid) { c = &ctx[i]; break; }
+
+            CEmutex_unlock(&c->start_lock);
+
+            if (c->is_rr) {
+                CEmutex_unlock(&c->pause_lock);
+                if (c->done >= c->job.work)
+                    CEthread_join(next);
+            } else {
                 CEthread_join(next);
-        } else {
-            /* Algoritmos no‑RR: esperar hasta finalizar           */
-            CEthread_join(next);
+            }
         }
     }
-
 
     /* ---- resumen --------------------------------------------------- */
     int total = 0;
@@ -185,4 +208,5 @@ void ce_run_plan(const CE_Job jobs[], int n,
 
     free(ctx); free(thr);
 }
+
 

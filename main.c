@@ -3,7 +3,7 @@
 
 // Variables globales requeridas por planner/worker
 
-int W = 3; // cantidad de carros que cruzan por turno en el algoritmo de equidad
+int W = 1; // cantidad de carros que cruzan por turno en el algoritmo de equidad
 
 int main() {
     CE_Job jobs[6];
