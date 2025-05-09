@@ -1,10 +1,20 @@
-#include <stdio.h>
-#include "planner.h"
+#include "car.h"
+#include "server.h"
+#include <pthread.h>
+#include <stdlib.h>
+
 
 // Globales requeridas (aunque no se usen con SJF)
 int W = 2;
 
 int main() {
+    // Crear carros
+    create_cars();
+    // Iniciar servidor
+    start_server();
+
+    /*
+
     CE_Job jobs[6];
 
     // ID 0 - Izquierda - trabajo corto
@@ -27,6 +37,9 @@ int main() {
 
     // Ejecución con algoritmo SJF (Shortest Job First)
     ce_run_plan(jobs, 6, SCHED_CE_SJF, 0, W);
+    */
 
     return 0;
+
+
 }

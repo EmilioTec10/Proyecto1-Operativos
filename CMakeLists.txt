@@ -4,6 +4,7 @@ project(Proyecto1_Operativos C)
 set(CMAKE_C_STANDARD 11)
 
 include_directories(.)
+find_package(Threads REQUIRED)
 
 add_executable(Proyecto1_Operativos
     CEthreads.c
@@ -14,4 +15,9 @@ add_executable(Proyecto1_Operativos
     planner.c
     planner.h
     flow_equity.c
-    flow_equity.h)
+    flow_equity.h
+    car.c
+    car.h
+    server.c
+    server.h)
+target_link_libraries(Proyecto1_Operativos Threads::Threads)

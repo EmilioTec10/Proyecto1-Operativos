@@ -1,22 +1,34 @@
 import pygame
 import sys
+import socket
 
 # Constants
 WIDTH, HEIGHT = 1000, 600
 CAR_WIDTH, CAR_HEIGHT = 100, 60
 LEFT_START_X = 10
 RIGHT_START_X = WIDTH - CAR_WIDTH - 10
-LEFT_START_Y = 20
-RIGHT_START_Y = 20
+LEFT_START_Y = 150
+RIGHT_START_Y = 150
 CAR_SPACING = 130
-CARS_PER_SIDE = 5
+LINES_PARKING = 2
 MOVEMENT = 'none'
 
 ASPHALT_COLOR = (50, 50, 50)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 
+# Starting conection
+client = socket.socket()
+client.connect(("localhost", 8080))
 
+
+def parse_data(data_str):
+    carros = []
+    for carro in data_str.strip().split(';'):
+        if carro:
+            x, y, speed, movement, direction = map(int, carro.split(','))
+            carros.append((x, y, movement, speed, direction))
+    return carros
 def load_car_image(path, flip=False):
     image = pygame.image.load(path)
     image = pygame.transform.scale(image, (CAR_WIDTH, CAR_HEIGHT))
@@ -48,41 +60,35 @@ def draw_sign(direction):
     label = font.render(f"Direction: {direction.capitalize()}", True, (255, 255, 255))
     pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 - 120, 30, 240, 50))
     screen.blit(label, (WIDTH//2 - label.get_width()//2, 40))
+
+
+def get_car(direction, priority):
+    if priority == 0:
+        image = load_car_image('images/car4.png', direction)
+    elif priority == 1:
+        image = load_car_image('images/car1.png', direction)
+    else:
+        image = load_car_image('images/car5.png', direction)
+    return image
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Scheduling Cars")
 
     clock = pygame.time.Clock()
-    car_right_image = []
-    car_left_image = []
-    car_right_image.append(load_car_image("images/car1.png"))
-    car_left_image.append(load_car_image("images/car1.png", flip=True))
-    car_right_image.append(load_car_image("images/car2.png"))
-    car_left_image.append(load_car_image("images/car2.png", flip=True))
-    car_right_image.append(load_car_image("images/car3.png"))
-    car_left_image.append(load_car_image("images/car3.png", flip=True))
-    car_right_image.append(load_car_image("images/car4.png"))
-    car_left_image.append(load_car_image("images/car4.png", flip=True))
-    car_right_image.append(load_car_image("images/car5.png"))
-    car_left_image.append(load_car_image("images/car5.png", flip=True))
 
-    left_cars = []
-    right_cars = []
+    lines = []
 
-    for i in range(CARS_PER_SIDE):
-        x_left = LEFT_START_X
+    for i in range(LINES_PARKING):
         y_left = LEFT_START_Y + 130*i
-        left_cars.append((x_left, y_left))
-
-        x_right = RIGHT_START_X
+        lines.append((LEFT_START_X, y_left))
         y_right = RIGHT_START_Y + 130*i
-        right_cars.append((x_right, y_right))
-
+        lines.append((RIGHT_START_X, y_right))
+        print(RIGHT_START_X)
     running = True
     while running:
         clock.tick(60)
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -90,27 +96,20 @@ def main():
         screen.fill(ASPHALT_COLOR)
 
         draw_lane_markings(screen)
+        data = client.recv(1024).decode()
+        carros = parse_data(data)
 
-
-
-        # Draw left cars and lines
-        i = 0
-        for pos in left_cars:
-            if MOVEMENT == "left":
-                pass
-            screen.blit(car_left_image[i], pos)
-            i+=1
-
-        draw_parking_lines(screen, left_cars)
+        # Draw lines
+        draw_parking_lines(screen, lines)
 
         # Draw right cars and lines
         i = 0
-        for pos in right_cars:
-            if MOVEMENT == "right":
-                pass
-            screen.blit(car_right_image[i], pos)
+        for x, y, movement, speed, direction in carros:
+            if i == 3:
+                i = 0
+            img_carro = get_car(direction, i)
             i+=1
-        draw_parking_lines(screen, right_cars)
+            screen.blit(img_carro, (x+speed*movement, y))
 
         pygame.display.flip()
 

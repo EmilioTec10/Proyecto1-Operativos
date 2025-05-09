@@ -1,18 +1,20 @@
-
-# Consider dependencies only in project.
-set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
-
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
+  "C"
   )
+# The set of files for implicit dependencies of each language:
+set(CMAKE_DEPENDS_CHECK_C
+  "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/CEthreads.c" "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o"
+  "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/flow_equity.c" "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o"
+  "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/main.c" "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir/main.c.o"
+  "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/planner.c" "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir/planner.c.o"
+  "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/scheduler.c" "/home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o"
+  )
+set(CMAKE_C_COMPILER_ID "GNU")
 
-# The set of dependency files which are needed:
-set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/emilio/Documents/Proyecto1-Operativos/CEthreads.c" "CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o.d"
-  "/home/emilio/Documents/Proyecto1-Operativos/flow_equity.c" "CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o.d"
-  "/home/emilio/Documents/Proyecto1-Operativos/main.c" "CMakeFiles/Proyecto1_Operativos.dir/main.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/main.c.o.d"
-  "/home/emilio/Documents/Proyecto1-Operativos/planner.c" "CMakeFiles/Proyecto1_Operativos.dir/planner.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/planner.c.o.d"
-  "/home/emilio/Documents/Proyecto1-Operativos/scheduler.c" "CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o" "gcc" "CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o.d"
+# The include file search paths:
+set(CMAKE_C_TARGET_INCLUDE_PATH
+  "../."
   )
 
 # Targets to which this target links.
