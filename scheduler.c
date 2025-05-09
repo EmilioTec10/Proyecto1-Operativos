@@ -1,34 +1,22 @@
-/*  scheduler.c  — versión con exclusión mutua               */
 #include "scheduler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
-/* ---------------- datos internos ------------------------- */
 #define MAX_THREADS 100
 
-static ScheduledThread ready_queue[MAX_THREADS];
-static int             queue_size       = 0;
-static CE_scheduler_mode_t current_mode;
+static ScheduledThread ready_left[MAX_THREADS];
+static ScheduledThread ready_right[MAX_THREADS];
+static int size_left = 0;
+static int size_right = 0;
 
-/* ► nuevo cerrojo para proteger la cola */
+static CE_scheduler_mode_t current_mode;
 static CEmutex_t sched_lock;
 
-/* -------- helpers privados --------------------------------------- */
-static void shift_left(int from)
-{
-    for (int k = from; k < queue_size - 1; ++k)
-        ready_queue[k] = ready_queue[k + 1];
-    queue_size--;
-}
-/* ----------------------------------------------------------------- */
-
-void scheduler_init(CE_scheduler_mode_t mode)
-{
+void scheduler_init(CE_scheduler_mode_t mode) {
     current_mode = mode;
-    queue_size   = 0;
-
-    CEmutex_init(&sched_lock);              /*  NEW  */
+    size_left = size_right = 0;
+    CEmutex_init(&sched_lock);
 
     printf("[scheduler] Algoritmo inicializado: ");
     switch (mode) {
@@ -41,142 +29,158 @@ void scheduler_init(CE_scheduler_mode_t mode)
     }
 }
 
-void scheduler_add_thread(CEthread_t th,
-                          int est_time,
-                          int prio,
-                          int deadline)
-{
-    CEmutex_lock(&sched_lock);              /*  NEW  */
+void scheduler_add_thread(CEthread_t th, int est_time, int prio, int deadline, int from_left) {
+    CEmutex_lock(&sched_lock);
 
-    if (queue_size >= MAX_THREADS) {
-        CEmutex_unlock(&sched_lock);
-        fprintf(stderr,"[scheduler] Cola llena\n");
-        return;
+    printf("[scheduler] Hilo ID=%d agregado al lado %s. Total=%d\n",
+        th.tid, from_left ? "Izquierda" : "Derecha", from_left ? size_left : size_right);
+ 
+
+    ScheduledThread st = {
+        .thread = th,
+        .estimated_time = est_time,
+        .priority = prio,
+        .remaining_work = est_time,
+        .arrival_time = (int)time(NULL),
+        .deadline = deadline
+    };
+
+    if (from_left) {
+        if (size_left >= MAX_THREADS) {
+            fprintf(stderr, "[scheduler] Cola izquierda llena\n");
+            CEmutex_unlock(&sched_lock);
+            return;
+        }
+        ready_left[size_left++] = st;
+    } else {
+        if (size_right >= MAX_THREADS) {
+            fprintf(stderr, "[scheduler] Cola derecha llena\n");
+            CEmutex_unlock(&sched_lock);
+            return;
+        }
+        ready_right[size_right++] = st;
     }
 
-    ScheduledThread *st = &ready_queue[queue_size++];
-    st->thread         = th;
-    st->estimated_time = est_time;
-    st->priority       = prio;
-    st->arrival_time   = (int)time(NULL);
-    st->remaining_work = est_time;
-    st->deadline       = deadline;
-
-    CEmutex_unlock(&sched_lock);            /*  NEW  */
-    printf("[scheduler] Hilo agregado. Total=%d\n", queue_size);
+    CEmutex_unlock(&sched_lock);
+    printf("[scheduler] Hilo agregado al lado %s. Total=%d\n", from_left ? "Izquierda" : "Derecha", from_left ? size_left : size_right);
 }
 
-CEthread_t scheduler_next_thread(void)
-{
-    CEmutex_lock(&sched_lock);              /*  NEW  */
+static int select_index(ScheduledThread *queue, int size) {
+    if (current_mode == SCHED_CE_FCFS || size == 0)
+        return 0;
 
-    if (queue_size == 0) {
-        CEmutex_unlock(&sched_lock);
-        fprintf(stderr,"[scheduler] Cola vacía\n");
-        exit(1);
-    }
-
-    /* --- limpiar terminados (sólo RR) --------------------- */
-    if (current_mode == SCHED_CE_RR) {
-        int i = 0;
-        while (i < queue_size) {
-            if (ready_queue[i].remaining_work <= 0)
-                shift_left(i);              /* shift_left ya reduce queue_size */
-            else
-                i++;
-        }
-        if (queue_size == 0) {
-            CEmutex_unlock(&sched_lock);
-            fprintf(stderr,"[scheduler] Cola vacía después de limpiar\n");
-            exit(1);
-        }
-    }
-
-    /* --- elegir índice según política --------------------- */
     int idx = 0;
     switch (current_mode) {
-        case SCHED_CE_FCFS:  idx = 0; break;
-
         case SCHED_CE_SJF: {
-            int best = ready_queue[0].estimated_time;
-            for (int i = 1; i < queue_size; ++i)
-                if (ready_queue[i].estimated_time < best) {
-                    best = ready_queue[i].estimated_time;
-                    idx  = i;
+            int best = queue[0].estimated_time;
+            for (int i = 1; i < size; ++i) {
+                if (queue[i].estimated_time < best) {
+                    best = queue[i].estimated_time;
+                    idx = i;
                 }
+            }
         } break;
 
         case SCHED_CE_PRIORITY: {
-            int best = ready_queue[0].priority;
-            for (int i = 1; i < queue_size; ++i)
-                if (ready_queue[i].priority < best) {
-                    best = ready_queue[i].priority;
-                    idx  = i;
+            int best = queue[0].priority;
+            for (int i = 1; i < size; ++i) {
+                if (queue[i].priority < best) {
+                    best = queue[i].priority;
+                    idx = i;
                 }
+            }
         } break;
 
         case SCHED_CE_REALTIME: {
-            int best = ready_queue[0].deadline;
-            for (int i = 1; i < queue_size; ++i)
-                if (ready_queue[i].deadline < best) {
-                    best = ready_queue[i].deadline;
-                    idx  = i;
+            int best = queue[0].deadline;
+            for (int i = 1; i < size; ++i) {
+                if (queue[i].deadline < best) {
+                    best = queue[i].deadline;
+                    idx = i;
                 }
+            }
         } break;
 
-        case SCHED_CE_RR:   idx = 0; break;
-
+        case SCHED_CE_RR:
         default:
-            CEmutex_unlock(&sched_lock);
-            fprintf(stderr,"[scheduler] Modo desconocido\n");
-            exit(1);
+            idx = 0;
+            break;
     }
 
-    /* --- cola circular en RR / pop en otros modos ---------- */
-    CEthread_t chosen_tid = ready_queue[idx].thread;
-
-    if (current_mode == SCHED_CE_RR) {
-        ScheduledThread temp = ready_queue[idx];
-        for (int i = idx; i < queue_size - 1; ++i)
-            ready_queue[i] = ready_queue[i + 1];
-        ready_queue[queue_size - 1] = temp;
-    } else {
-        shift_left(idx);
-    }
-
-    CEmutex_unlock(&sched_lock);            /*  NEW  */
-    return chosen_tid;
+    return idx;
 }
 
-int scheduler_has_threads(void)
-{
-    CEmutex_lock(&sched_lock);              /*  NEW  */
-
-    int alive = 0;
-
-    if (current_mode == SCHED_CE_RR) {
-        for (int i = 0; i < queue_size; ++i)
-            if (ready_queue[i].remaining_work > 0) { alive = 1; break; }
-    } else {
-        alive = (queue_size > 0);
+CEthread_t scheduler_next_thread_from_left(void) {
+    CEmutex_lock(&sched_lock);
+    if (size_left == 0) {
+        CEmutex_unlock(&sched_lock);
+        fprintf(stderr, "[scheduler] Cola izquierda vacía\n");
+        exit(1);
     }
+    int idx = select_index(ready_left, size_left);
+    CEthread_t next = ready_left[idx].thread;
+    for (int i = idx; i < size_left - 1; ++i)
+        ready_left[i] = ready_left[i + 1];
+    size_left--;
+    CEmutex_unlock(&sched_lock);
+    return next;
+}
 
-    CEmutex_unlock(&sched_lock);            /*  NEW  */
+CEthread_t scheduler_next_thread_from_right(void) {
+    CEmutex_lock(&sched_lock);
+    
+    if (size_right == 0) {
+        CEmutex_unlock(&sched_lock);
+        fprintf(stderr, "[scheduler] Cola derecha vacía\n");
+        exit(1);
+    }
+    int idx = select_index(ready_right, size_right);
+    CEthread_t next = ready_right[idx].thread;
+    for (int i = idx; i < size_right - 1; ++i)
+        ready_right[i] = ready_right[i + 1];
+        printf("[scheduler] Siguiente hilo desde derecha: ID=%d\n", ready_right[idx].thread.tid);
+
+    size_right--;
+    CEmutex_unlock(&sched_lock);
+    return next;
+}
+
+int scheduler_has_threads_left(void) {
+    CEmutex_lock(&sched_lock);
+    int result = (size_left > 0);
+    CEmutex_unlock(&sched_lock);
+    return result;
+}
+
+int scheduler_has_threads_right(void) {
+    CEmutex_lock(&sched_lock);
+    int result = (size_right > 0);
+    CEmutex_unlock(&sched_lock);
+    return result;
+}
+
+
+int scheduler_has_threads(void) {
+    CEmutex_lock(&sched_lock);
+    int alive = (size_left + size_right > 0);
+    CEmutex_unlock(&sched_lock);
     return alive;
 }
 
-/* -------- actualización desde los hijos RR ------------------------ */
-void scheduler_rr_report(pid_t tid, int unidades)
-{
-    if (current_mode != SCHED_CE_RR) return;
+void scheduler_rr_report(pid_t tid, int unidades) {
+    // Si más adelante querés usar RR por lado, implementalo aquí
+    (void)tid;
+    (void)unidades;
+}
 
-    CEmutex_lock(&sched_lock);              /*  NEW  */
-
-    for (int i = 0; i < queue_size; ++i)
-        if (ready_queue[i].thread.tid == tid) {
-            ready_queue[i].remaining_work -= unidades;
-            break;
-        }
-
-    CEmutex_unlock(&sched_lock);            /*  NEW  */
+void scheduler_debug_print_right_queue(void) {
+    CEmutex_lock(&sched_lock);
+    printf("[DEBUG] Contenido de la cola derecha (%d hilos):\n", size_right);
+    for (int i = 0; i < size_right; ++i) {
+        printf("  -> Hilo ID=%d | TID=%d | est_time=%d\n",
+               ready_right[i].thread.tid,
+               ready_right[i].thread.tid,
+               ready_right[i].estimated_time);
+    }
+    CEmutex_unlock(&sched_lock);
 }

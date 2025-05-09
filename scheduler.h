@@ -26,9 +26,15 @@ void  scheduler_init(CE_scheduler_mode_t mode);
 void  scheduler_add_thread(CEthread_t thread,
                            int estimated_time,
                            int priority,
-                           int deadline);
-CEthread_t scheduler_next_thread(void);
+                           int deadline,
+                           int from_left); // nuevo parámetro para doble cola
+CEthread_t scheduler_next_thread_from_left(void);
+CEthread_t scheduler_next_thread_from_right(void);
+int scheduler_has_threads_left(void);
+int scheduler_has_threads_right(void);
 int   scheduler_has_threads(void);
 void  scheduler_rr_report(pid_t tid,int unidades);
+void scheduler_debug_print_right_queue(void);
+
 
 #endif

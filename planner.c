@@ -104,11 +104,12 @@ static void* worker(void *arg)
 
 /* ------------------------------------------------------------------ */
 void ce_run_plan(const CE_Job jobs[], int n,
-                 CE_scheduler_mode_t mode, int quantum_rr, int W)
-{
+                 CE_scheduler_mode_t mode, int quantum_rr, int W) {
+
     printf("\n===== Iniciando con modo %d =====\n", mode);
 
     scheduler_init(mode);
+
     g_counter = 0;
     CEmutex_init(&g_lock);
     CEmutex_init(&print_lock);
@@ -116,21 +117,16 @@ void ce_run_plan(const CE_Job jobs[], int n,
     WorkerCtx *ctx = calloc(n, sizeof(*ctx));
     CEthread_t *thr = calloc(n, sizeof(*thr));
 
-    if (modo_flujo_equity) {
+    if (modo_flujo_equity)
         equity_init(W);
-    }
 
-    /* ---- crear todos los hilos dormidos y registrarlos ------------- */
     for (int i = 0; i < n; ++i) {
-        ctx[i].job        = jobs[i];
-        ctx[i].done       = 0;
-        ctx[i].quantum    = quantum_rr;
-        ctx[i].is_rr      = (mode == SCHED_CE_RR);
-        ctx[i].from_left  = jobs[i].from_left;
-        ctx[i].terminado  = 0;
-
-        CEmutex_init(&ctx[i].permiso_paso);
-        CEmutex_lock(&ctx[i].permiso_paso);
+        ctx[i].job = jobs[i];
+        ctx[i].done = 0;
+        ctx[i].quantum = quantum_rr;
+        ctx[i].is_rr = (mode == SCHED_CE_RR);
+        ctx[i].from_left = jobs[i].from_left;
+        ctx[i].terminado = 0;
 
         CEmutex_init(&ctx[i].start_lock);
         CEmutex_lock(&ctx[i].start_lock);
@@ -140,42 +136,74 @@ void ce_run_plan(const CE_Job jobs[], int n,
             CEmutex_lock(&ctx[i].pause_lock);
         }
 
-        printf("[DEBUG] Creando hilo %d (ID %d, from_left = %d)\n",
-               i, jobs[i].id, jobs[i].from_left);
-
         CEthread_create(&thr[i], worker, &ctx[i]);
 
         scheduler_add_thread(thr[i],
                              ctx[i].job.work,
                              ctx[i].job.priority,
-                             ctx[i].job.deadline);
+                             ctx[i].job.deadline,
+                             ctx[i].from_left);
     }
 
     if (modo_flujo_equity) {
-        // --- NUEVO: planificación por lote por lado ---
         int lado = 1; // 1 = izquierda, 0 = derecha
-        int hilos_terminados = 0;
+        int terminados = 0;
 
-        while (hilos_terminados < n) {
+        while (scheduler_has_threads_left() || scheduler_has_threads_right()) {
             int lote = 0;
-
-            for (int i = 0; i < n && lote < W; ++i) {
-                if (!ctx[i].terminado && ctx[i].from_left == lado) {
-                    CEmutex_unlock(&ctx[i].start_lock);
-                    CEthread_join(thr[i]);
-                    ctx[i].terminado = 1;
-                    hilos_terminados++;
+        
+            if ((lado == 1 && !scheduler_has_threads_left()) ||
+                (lado == 0 && !scheduler_has_threads_right())) {
+                // No hay hilos del lado actual → cambiar de lado
+                lado = 1 - lado;
+                continue;
+            }
+        
+            // Ejecutar lote de W hilos del lado actual
+            while (lote < W) {
+                if ((lado == 1 && !scheduler_has_threads_left()) ||
+                    (lado == 0 && !scheduler_has_threads_right())) break;
+        
+                CEthread_t next = (lado == 1)
+                    ? scheduler_next_thread_from_left()
+                    : scheduler_next_thread_from_right();
+        
+                WorkerCtx *c = NULL;
+                for (int i = 0; i < n; ++i)
+                    if (thr[i].tid == next.tid) { c = &ctx[i]; break; }
+        
+                if (c && !c->terminado) {
+                    CEmutex_unlock(&c->start_lock);
+                    CEthread_join(next);
+                    c->terminado = 1;
                     lote++;
                 }
             }
-
-            lado = 1 - lado;
+        
+            lado = 1 - lado;  // Alternar dirección
         }
+        
 
     } else {
-        // 🔁 lógica original para otros algoritmos
         while (scheduler_has_threads()) {
-            CEthread_t next = scheduler_next_thread();
+            // Determinar lado en base al contenido de las colas
+            CEthread_t next;
+            if (scheduler_has_threads()) {
+                if (mode == SCHED_CE_SJF || mode == SCHED_CE_FCFS || mode == SCHED_CE_PRIORITY || mode == SCHED_CE_REALTIME) {
+                    // Default a la izquierda primero si existen elementos
+                    if (scheduler_has_threads()) {
+                        if ((next = scheduler_next_thread_from_left()).tid != 0) {
+                            ;
+                        } else {
+                            next = scheduler_next_thread_from_right();
+                        }
+                    }
+                } else {
+                    // En RR o cualquier otro, se puede extender a soporte dual RR
+                    fprintf(stderr, "[scheduler] Modo no soportado en dual-cola\n");
+                    exit(1);
+                }
+            } else break;
 
             WorkerCtx *c = NULL;
             for (int i = 0; i < n; ++i)
@@ -193,12 +221,10 @@ void ce_run_plan(const CE_Job jobs[], int n,
         }
     }
 
-    /* ---- resumen --------------------------------------------------- */
     int total = 0;
     for (int i = 0; i < n; ++i) total += jobs[i].work;
     printf("\n✅ Counter final = %d (esperado = %d)\n", g_counter, total);
 
-    /* limpieza */
     for (int i = 0; i < n; ++i) {
         CEmutex_destroy(&ctx[i].start_lock);
         if (ctx[i].is_rr) CEmutex_destroy(&ctx[i].pause_lock);
@@ -206,7 +232,6 @@ void ce_run_plan(const CE_Job jobs[], int n,
     CEmutex_destroy(&g_lock);
     CEmutex_destroy(&print_lock);
 
-    free(ctx); free(thr);
+    free(ctx);
+    free(thr);
 }
-
-

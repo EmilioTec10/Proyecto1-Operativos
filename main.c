@@ -1,31 +1,32 @@
 #include <stdio.h>
 #include "planner.h"
 
-// Variables globales requeridas por planner/worker
-
-int W = 1; // cantidad de carros que cruzan por turno en el algoritmo de equidad
+// Globales requeridas (aunque no se usen con SJF)
+int W = 2;
 
 int main() {
     CE_Job jobs[6];
 
-    // Carros de la izquierda (IDs 0,1,2)
-    for (int i = 0; i < 3; ++i) {
-        jobs[i].id = i;
-        jobs[i].work = 5;       // cada carro cruza en 5 pasos
-        jobs[i].priority = 1;   // no importa para equidad
-        jobs[i].deadline = 10;  // no importa para equidad
-        jobs[i].from_left = 1;  // izquierda
-    }
+    // ID 0 - Izquierda - trabajo corto
+    jobs[0] = (CE_Job){ .id = 0, .work = 2, .priority = 1, .deadline = 10, .from_left = 1 };
 
-    // Carros de la derecha (IDs 3,4,5)
-    for (int i = 3; i < 6; ++i) {
-        jobs[i].id = i;
-        jobs[i].work = 5;
-        jobs[i].priority = 1;
-        jobs[i].deadline = 10;
-        jobs[i].from_left = 0;  // derecha
-    }
+    // ID 1 - Derecha - trabajo largo
+    jobs[1] = (CE_Job){ .id = 1, .work = 8, .priority = 1, .deadline = 10, .from_left = 0 };
 
-    ce_run_plan(jobs, 6, SCHED_CE_FCFS, 0, W);  // modo de planificación FCFS
+    // ID 2 - Izquierda - medio
+    jobs[2] = (CE_Job){ .id = 2, .work = 5, .priority = 1, .deadline = 10, .from_left = 1 };
+
+    // ID 3 - Derecha - muy corto
+    jobs[3] = (CE_Job){ .id = 3, .work = 1, .priority = 1, .deadline = 10, .from_left = 0 };
+
+    // ID 4 - Izquierda - medio
+    jobs[4] = (CE_Job){ .id = 4, .work = 4, .priority = 1, .deadline = 10, .from_left = 1 };
+
+    // ID 5 - Derecha - medio
+    jobs[5] = (CE_Job){ .id = 5, .work = 5, .priority = 1, .deadline = 10, .from_left = 0 };
+
+    // Ejecución con algoritmo SJF (Shortest Job First)
+    ce_run_plan(jobs, 6, SCHED_CE_SJF, 0, W);
+
     return 0;
 }

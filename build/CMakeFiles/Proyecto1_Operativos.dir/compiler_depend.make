@@ -187,7 +187,8 @@ CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o: ../flow_equity.c \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
-  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h
+  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
+  ../scheduler.h
 
 CMakeFiles/Proyecto1_Operativos.dir/main.c.o: ../main.c \
   /usr/include/stdc-predef.h \

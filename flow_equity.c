@@ -2,6 +2,7 @@
 #include <unistd.h>    
 #include "flow_equity.h"
 #include "CEthreads.h"
+#include "scheduler.h"
 
 static int w; // cantidad de carros por turno
 static int passed = 0;
@@ -42,12 +43,19 @@ void equity_request_pass(int from_left) {
         int opposite_waiting = (current_dir == 0) ? waiting_right : waiting_left;
 
        
-        if (crossing == 0 && passed >= w) {
-            if (opposite_waiting > 0 || current_waiting == 0) {
+        if (crossing == 0) {
+            // Cambio normal después de W pasos
+            if (passed >= w && (opposite_waiting > 0 || current_waiting == 0)) {
                 current_dir = 1 - current_dir;
                 passed = 0;
-                printf("🔁 [DEBUG] Cambio de dirección forzado → ahora %s\n",
-                       current_dir == 0 ? "Izquierda -> Derecha" : "Derecha -> Izquierda");
+                printf("🔁 Cambio de dirección (normal)\n");
+            }
+        
+            // 🔥 Cambio forzado si no hay nadie más en el lado actual
+            else if (current_waiting == 0 && opposite_waiting > 0) {
+                current_dir = 1 - current_dir;
+                passed = 0;
+                printf("🔁 Cambio de dirección (forzado por lado vacío)\n");
             }
         }
 
