@@ -1,0 +1,3 @@
+/home/emilio/Documents/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir
+/home/emilio/Documents/Proyecto1-Operativos/build/CMakeFiles/edit_cache.dir
+/home/emilio/Documents/Proyecto1-Operativos/build/CMakeFiles/rebuild_cache.dir
