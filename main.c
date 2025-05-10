@@ -1,45 +1,42 @@
-#include "car.h"
-#include "server.h"
-#include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include "CEthreads.c"  // Incluye todas tus funciones
 
+#define N 100000
 
-// Globales requeridas (aunque no se usen con SJF)
-int W = 2;
+int contador = 0;
+CEmutex_t lock;
+
+void *incrementar(void *arg) {
+    for (int i = 0; i < N; i++) {
+        CEmutex_lock(&lock);
+        contador++;
+        CEmutex_unlock(&lock);
+    }
+    return NULL;
+}
 
 int main() {
-    // Crear carros
-    create_cars();
-    // Iniciar servidor
-    start_server();
+    CEthread_t t1, t2;
 
-    /*
+    // Inicializar el mutex
+    CEmutex_init(&lock);
 
-    CE_Job jobs[6];
+    // Crear dos hilos
+    CEthread_create(&t1, incrementar, NULL);
+    CEthread_create(&t2, incrementar, NULL);
 
-    // ID 0 - Izquierda - trabajo corto
-    jobs[0] = (CE_Job){ .id = 0, .work = 2, .priority = 1, .deadline = 10, .from_left = 1 };
+    // Esperar a que terminen
+    CEthread_join(t1);
+    CEthread_join(t2);
 
-    // ID 1 - Derecha - trabajo largo
-    jobs[1] = (CE_Job){ .id = 1, .work = 8, .priority = 1, .deadline = 10, .from_left = 0 };
+    // Mostrar resultado final
+    printf("✅ Contador final: %d (esperado: %d)\n", contador, 2 * N);
 
-    // ID 2 - Izquierda - medio
-    jobs[2] = (CE_Job){ .id = 2, .work = 5, .priority = 1, .deadline = 10, .from_left = 1 };
-
-    // ID 3 - Derecha - muy corto
-    jobs[3] = (CE_Job){ .id = 3, .work = 1, .priority = 1, .deadline = 10, .from_left = 0 };
-
-    // ID 4 - Izquierda - medio
-    jobs[4] = (CE_Job){ .id = 4, .work = 4, .priority = 1, .deadline = 10, .from_left = 1 };
-
-    // ID 5 - Derecha - medio
-    jobs[5] = (CE_Job){ .id = 5, .work = 5, .priority = 1, .deadline = 10, .from_left = 0 };
-
-    // Ejecución con algoritmo SJF (Shortest Job First)
-    ce_run_plan(jobs, 6, SCHED_CE_SJF, 0, W);
-    */
+    // Destruir el mutex
+    if (CEmutex_destroy(&lock) != 0) {
+        fprintf(stderr, "❌ Error al destruir el mutex\n");
+    }
 
     return 0;
-
-
 }

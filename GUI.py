@@ -2,6 +2,7 @@ import pygame
 import sys
 import socket
 
+
 # Constants
 WIDTH, HEIGHT = 1000, 600
 CAR_WIDTH, CAR_HEIGHT = 100, 60
@@ -17,17 +18,29 @@ ASPHALT_COLOR = (50, 50, 50)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
 
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Scheduling Cars")
+clock = pygame.time.Clock()
+
+
+# Crear una fuente
+font = pygame.font.SysFont("Arial", 24)
+label_text = "Modo: Equidad | W=3"
+# Crear superficie de texto
+label_surface = font.render(label_text, True, WHITE)  # texto, antialias, color
+
 # Starting conection
-client = socket.socket()
-client.connect(("localhost", 8080))
+#client = socket.socket()
+#client.connect(("localhost", 8000))
 
 
 def parse_data(data_str):
     carros = []
     for carro in data_str.strip().split(';'):
         if carro:
-            x, y, speed, movement, direction = map(int, carro.split(','))
-            carros.append((x, y, movement, speed, direction))
+            x, y, speed, movement, direction, priority = map(int, carro.split(','))
+            carros.append((x, y, movement, speed, direction, priority))
     return carros
 def load_car_image(path, flip=False):
     image = pygame.image.load(path)
@@ -72,11 +85,7 @@ def get_car(direction, priority):
     return image
 
 def main():
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("Scheduling Cars")
 
-    clock = pygame.time.Clock()
 
     lines = []
 
@@ -85,7 +94,6 @@ def main():
         lines.append((LEFT_START_X, y_left))
         y_right = RIGHT_START_Y + 130*i
         lines.append((RIGHT_START_X, y_right))
-        print(RIGHT_START_X)
     running = True
     while running:
         clock.tick(60)
@@ -94,22 +102,20 @@ def main():
                 running = False
 
         screen.fill(ASPHALT_COLOR)
-
+        screen.blit(label_surface, (10, 10))
         draw_lane_markings(screen)
+        """
         data = client.recv(1024).decode()
         carros = parse_data(data)
 
         # Draw lines
         draw_parking_lines(screen, lines)
 
-        # Draw right cars and lines
-        i = 0
-        for x, y, movement, speed, direction in carros:
-            if i == 3:
-                i = 0
-            img_carro = get_car(direction, i)
-            i+=1
+        # Draw cars
+        for x, y, movement, speed, direction, priority in carros:
+            img_carro = get_car(direction, priority)
             screen.blit(img_carro, (x+speed*movement, y))
+        """
 
         pygame.display.flip()
 

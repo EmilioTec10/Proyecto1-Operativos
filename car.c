@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define MAX_CARS 10
 

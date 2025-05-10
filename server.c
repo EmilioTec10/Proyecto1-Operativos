@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define PORT 8080
+#define PORT 8000
 
 void start_server() {
     int server_fd, client_fd;
@@ -31,12 +31,13 @@ void start_server() {
 
         for (int i = 0; i < num_cars; i++) {
             offset += snprintf(buffer + offset, sizeof(buffer) - offset,
-                "%d,%d,%d,%d,%d;",
+                "%d,%d,%d,%d,%d,%d;",
                 cars[i].x,
                 cars[i].y,
                 cars[i].speed,
                 cars[i].moving,
-                cars[i].direction
+                cars[i].direction,
+                cars[i].priority
             );        }
 
         send(client_fd, buffer, strlen(buffer), 0);

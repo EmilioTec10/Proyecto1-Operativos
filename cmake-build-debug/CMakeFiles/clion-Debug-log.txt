@@ -1,4 +1,4 @@
 /snap/clion/338/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" -S /home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos -B /home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/cmake-build-debug
--- Configuring done (0.0s)
--- Generating done (0.0s)
+-- Configuring done (0.2s)
+-- Generating done (0.1s)
 -- Build files have been written to: /home/nics/Desktop/Operativos/Proyecto_1/Proyecto1-Operativos/cmake-build-debug
