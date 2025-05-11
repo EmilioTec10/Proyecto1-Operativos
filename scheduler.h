@@ -36,5 +36,7 @@ int   scheduler_has_threads(void);
 void  scheduler_rr_report(pid_t tid,int unidades);
 void scheduler_debug_print_right_queue(void);
 
+void scheduler_cleanup(void);
+
 
 #endif
