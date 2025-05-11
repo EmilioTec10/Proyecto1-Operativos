@@ -1,5 +1,5 @@
 CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o: \
- /home/emilio/Documents/Proyecto1-Operativos/CEthreads.c \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/CEthreads.c \
  /usr/include/stdc-predef.h /usr/include/sched.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \

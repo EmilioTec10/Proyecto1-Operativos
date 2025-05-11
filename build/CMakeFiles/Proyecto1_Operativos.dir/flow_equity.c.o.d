@@ -1,5 +1,5 @@
 CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o: \
- /home/emilio/Documents/Proyecto1-Operativos/flow_equity.c \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/flow_equity.c \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -29,8 +29,8 @@ CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o: \
  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
- /home/emilio/Documents/Proyecto1-Operativos/flow_equity.h \
- /home/emilio/Documents/Proyecto1-Operativos/CEthreads.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/flow_equity.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/CEthreads.h \
  /usr/include/x86_64-linux-gnu/sys/types.h \
  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
@@ -53,4 +53,4 @@ CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o: \
  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
- /home/emilio/Documents/Proyecto1-Operativos/scheduler.h
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/scheduler.h

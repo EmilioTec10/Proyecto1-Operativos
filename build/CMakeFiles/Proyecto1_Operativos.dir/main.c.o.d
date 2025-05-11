@@ -1,5 +1,5 @@
 CMakeFiles/Proyecto1_Operativos.dir/main.c.o: \
- /home/emilio/Documents/Proyecto1-Operativos/main.c \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/main.c \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -23,8 +23,8 @@ CMakeFiles/Proyecto1_Operativos.dir/main.c.o: \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
- /home/emilio/Documents/Proyecto1-Operativos/planner.h \
- /home/emilio/Documents/Proyecto1-Operativos/CEthreads.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/planner.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/CEthreads.h \
  /usr/include/x86_64-linux-gnu/sys/types.h \
  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
@@ -47,4 +47,4 @@ CMakeFiles/Proyecto1_Operativos.dir/main.c.o: \
  /usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h \
  /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
- /home/emilio/Documents/Proyecto1-Operativos/scheduler.h
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/scheduler.h

@@ -1,8 +1,8 @@
 CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o: \
- /home/emilio/Documents/Proyecto1-Operativos/scheduler.c \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/scheduler.c \
  /usr/include/stdc-predef.h \
- /home/emilio/Documents/Proyecto1-Operativos/scheduler.h \
- /home/emilio/Documents/Proyecto1-Operativos/CEthreads.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/scheduler.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/CEthreads.h \
  /usr/include/x86_64-linux-gnu/sys/types.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \

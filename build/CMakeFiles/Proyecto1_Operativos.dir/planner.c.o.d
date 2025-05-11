@@ -1,5 +1,5 @@
 CMakeFiles/Proyecto1_Operativos.dir/planner.c.o: \
- /home/emilio/Documents/Proyecto1-Operativos/planner.c \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/planner.c \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -57,7 +57,7 @@ CMakeFiles/Proyecto1_Operativos.dir/planner.c.o: \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/strings.h \
- /home/emilio/Documents/Proyecto1-Operativos/planner.h \
- /home/emilio/Documents/Proyecto1-Operativos/CEthreads.h \
- /home/emilio/Documents/Proyecto1-Operativos/scheduler.h \
- /home/emilio/Documents/Proyecto1-Operativos/flow_equity.h
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/planner.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/CEthreads.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/scheduler.h \
+ /home/kun/Documentos/Operativos/Proyecto1-Operativos/flow_equity.h
