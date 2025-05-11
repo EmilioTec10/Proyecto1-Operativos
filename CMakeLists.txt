@@ -14,4 +14,7 @@ add_executable(Proyecto1_Operativos
     planner.c
     planner.h
     flow_equity.c
-    flow_equity.h)
+    flow_equity.h
+    flow_fifo.c
+    flow_fifo.h
+    )

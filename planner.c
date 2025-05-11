@@ -6,6 +6,7 @@
 #include "CEthreads.h"
 #include "scheduler.h"
 #include "flow_equity.h"
+#include "flow_fifo.h"
 
 typedef struct {
     CE_Job    job;          // ya estaba
@@ -20,6 +21,8 @@ typedef struct {
 } WorkerCtx;
 
 int modo_flujo_equity = 1; // o 0, según el algoritmo de flujo elegido
+
+flow_control_mode current_flow_mode = FLOW_FIFO; // Valor por defecto
 
 /* -------- recurso compartido de demostración ---------------------- */
 static int      g_counter = 0;
@@ -48,32 +51,48 @@ static void* worker(void *arg)
         ctx->from_left ? "Izquierda" : "Derecha");
     CEmutex_unlock(&print_lock);
 
-    if (modo_flujo_equity) {
-        // 🟢 Algoritmo de flujo: Equidad
-        equity_request_pass(ctx->from_left);
-
-        for (int i = 0; i < ctx->job.work; ++i) {
-            CEmutex_lock(&g_lock);
-            g_counter++;
-            avanzar_carro(ctx->job.id, i, ctx->from_left);  // Podés personalizar esta función
-            CEmutex_unlock(&g_lock);
-            usleep(100000);  // Velocidad de cruce
-        }
-
-        equity_leave();
-    } else {
-        // 🔵 Algoritmo de planificación tradicional (FCFS, RR, etc.)
-        while (ctx->done < ctx->job.work)
-        {
-            /* ► Esperar turno en RR */
+    switch (current_flow_mode) {
+        case FLOW_EQUITY:
+            equity_request_pass(ctx->from_left);
+            for (int i = 0; i < ctx->job.work; ++i) {
+                CEmutex_lock(&g_lock);
+                g_counter++;
+                avanzar_carro(ctx->job.id, i, ctx->from_left);
+                CEmutex_unlock(&g_lock);
+                usleep(100000);
+            }
+            equity_leave();
+            break;
+        
+        case FLOW_FIFO:
+            fifo_request_pass(ctx->from_left);
+            for (int i = 0; i < ctx->job.work; ++i) {
+                CEmutex_lock(&g_lock);
+                g_counter++;
+                avanzar_carro(ctx->job.id, i, ctx->from_left);
+                CEmutex_unlock(&g_lock);
+                usleep(100000);
+            }
+            fifo_leave();
+            break;
+        
+        case FLOW_LETRERO:
+            // Implementar lógica para letrero si es necesario
+            break;
+        
+        default:
+            // Lógica tradicional del scheduler (FCFS, RR, etc.)
+            while (ctx->done < ctx->job.work) {
+                // Para Round Robin, espera su turno
             if (ctx->is_rr)
                 CEmutex_lock(&ctx->pause_lock);   /* bloquea hasta que el scheduler lo suelte */
 
-            /* ► Ejecutar un quantum ----------------------------------- */
+            // Ejecuta un quantum de trabajo
             int slice = ctx->job.work - ctx->done;
             if (ctx->is_rr && slice > ctx->quantum)
                 slice = ctx->quantum;
 
+            // Hace el trabajo
             for (int i = 0; i < slice; ++i) {
                 CEmutex_lock(&g_lock);
                 g_counter++;
@@ -90,7 +109,8 @@ static void* worker(void *arg)
                 else
                     CEmutex_unlock(&ctx->pause_lock);
             }
-        }
+            }
+            break;
     }
 
     CEmutex_lock(&print_lock);
@@ -117,8 +137,20 @@ void ce_run_plan(const CE_Job jobs[], int n,
     WorkerCtx *ctx = calloc(n, sizeof(*ctx));
     CEthread_t *thr = calloc(n, sizeof(*thr));
 
-    if (modo_flujo_equity)
-        equity_init(W);
+    // Inicializar según el modo de flujo
+    switch (current_flow_mode) {
+        case FLOW_EQUITY:
+            equity_init(W);
+            break;
+        case FLOW_FIFO:
+            fifo_init();
+            break;
+        case FLOW_LETRERO:
+            // letrero_init(); si existe
+            break;
+        default:
+            break;
+    }
 
     for (int i = 0; i < n; ++i) {
         ctx[i].job = jobs[i];
@@ -145,13 +177,14 @@ void ce_run_plan(const CE_Job jobs[], int n,
                              ctx[i].from_left);
     }
 
-    if (modo_flujo_equity) {
-        int lado = 1; // 1 = izquierda, 0 = derecha
-        int terminados = 0;
-
+    // Manejar la ejecución según el modo de flujo
+    if (current_flow_mode == FLOW_EQUITY) {
+        // Lógica existente de equity (lotes alternados)
+        int lado = 1;
         while (scheduler_has_threads_left() || scheduler_has_threads_right()) {
             int lote = 0;
-        
+
+            // Si no hay hilos del lado actual, cambia de lado
             if ((lado == 1 && !scheduler_has_threads_left()) ||
                 (lado == 0 && !scheduler_has_threads_right())) {
                 // No hay hilos del lado actual → cambiar de lado
@@ -161,36 +194,49 @@ void ce_run_plan(const CE_Job jobs[], int n,
         
             // Ejecutar lote de W hilos del lado actual
             while (lote < W) {
+                // Si no hay más hilos de este lado, sale
                 if ((lado == 1 && !scheduler_has_threads_left()) ||
                     (lado == 0 && !scheduler_has_threads_right())) break;
-        
+                
+                // Obtiene el próximo hilo del lado actual
                 CEthread_t next = (lado == 1)
                     ? scheduler_next_thread_from_left()
                     : scheduler_next_thread_from_right();
-        
+
+                // Busca el contexto correspondiente
                 WorkerCtx *c = NULL;
                 for (int i = 0; i < n; ++i)
                     if (thr[i].tid == next.tid) { c = &ctx[i]; break; }
-        
+
+                // Si encuentra el contexto y no ha terminado, lo ejecuta
                 if (c && !c->terminado) {
-                    CEmutex_unlock(&c->start_lock);
-                    CEthread_join(next);
+                    CEmutex_unlock(&c->start_lock); // Desbloquea el hilo
+                    CEthread_join(next);            // Espera a que termine
                     c->terminado = 1;
-                    lote++;
+                    lote++;                         // Cuenta este hilo en el lote
                 }
             }
         
-            lado = 1 - lado;  // Alternar dirección
+            lado = 1 - lado;  // Alterna el lado para el próximo lote
         }
-        
-
+    } else if (current_flow_mode == FLOW_FIFO) {
+        // Solo se unen los hilos, FIFO se maneja internamente
+        for (int i = 0; i < n; ++i) {
+            CEmutex_unlock(&ctx[i].start_lock);
+            CEthread_join(thr[i]);
+        }
+    } else if (current_flow_mode == FLOW_LETRERO) {
+        // Lógica para letrero
     } else {
+        // Lógica tradicional del scheduler
         while (scheduler_has_threads()) {
             // Determinar lado en base al contenido de las colas
             CEthread_t next;
+            
+            // Selecciona el próximo hilo según el algoritmo
             if (scheduler_has_threads()) {
                 if (mode == SCHED_CE_SJF || mode == SCHED_CE_FCFS || mode == SCHED_CE_PRIORITY || mode == SCHED_CE_REALTIME) {
-                    // Default a la izquierda primero si existen elementos
+                    // Intenta primero con la izquierda
                     if (scheduler_has_threads()) {
                         if ((next = scheduler_next_thread_from_left()).tid != 0) {
                             ;
@@ -205,12 +251,15 @@ void ce_run_plan(const CE_Job jobs[], int n,
                 }
             } else break;
 
+            // Busca el contexto del hilo seleccionado
             WorkerCtx *c = NULL;
             for (int i = 0; i < n; ++i)
                 if (thr[i].tid == next.tid) { c = &ctx[i]; break; }
 
+            // Desbloquea el hilo para que ejecute
             CEmutex_unlock(&c->start_lock);
 
+            // Para Round Robin
             if (c->is_rr) {
                 CEmutex_unlock(&c->pause_lock);
                 if (c->done >= c->job.work)

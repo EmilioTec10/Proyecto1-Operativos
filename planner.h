@@ -12,6 +12,12 @@ typedef struct {
     int from_left;  /* 1 si viene de la izquierda, 0 si de la derecha */
 } CE_Job;
 
+typedef enum {
+    FLOW_EQUITY,
+    FLOW_FIFO,
+    FLOW_LETRERO
+} flow_control_mode;
+
 /* Lanza todos los hilos, configura el scheduler y espera a que terminen.
    - jobs[] : arreglo de descripciones
    - n      : cuántos elementos en jobs[]
