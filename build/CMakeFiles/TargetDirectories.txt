@@ -1,3 +1,0 @@
-/home/kun/Documentos/Operativos/Proyecto1-Operativos/build/CMakeFiles/Proyecto1_Operativos.dir
-/home/kun/Documentos/Operativos/Proyecto1-Operativos/build/CMakeFiles/edit_cache.dir
-/home/kun/Documentos/Operativos/Proyecto1-Operativos/build/CMakeFiles/rebuild_cache.dir

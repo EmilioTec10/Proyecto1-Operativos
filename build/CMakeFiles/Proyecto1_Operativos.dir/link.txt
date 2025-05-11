@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/Proyecto1_Operativos.dir/CEthreads.c.o CMakeFiles/Proyecto1_Operativos.dir/main.c.o CMakeFiles/Proyecto1_Operativos.dir/scheduler.c.o CMakeFiles/Proyecto1_Operativos.dir/planner.c.o CMakeFiles/Proyecto1_Operativos.dir/flow_equity.c.o -o Proyecto1_Operativos
