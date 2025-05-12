@@ -5,18 +5,16 @@
     "tiempo_letrero": "",
     "largo_calle": "100",
     "velocidad": {
-        "normal": "20",
-        "deportivo": "40",
-        "emergencia": "60"
+        "normal": "10",
+        "deportivo": "20",
+        "emergencia": "30"
     },
-    "izquierda": {
-        "normal": "",
-        "deportivo": "",
-        "emergencia": ""
-    },
-    "derecha": {
-        "normal": "",
-        "deportivo": "",
-        "emergencia": ""
-    }
+    "cars": [
+        "normal_izquierda",
+        "deportivo_izquierda",
+        "emergencia_izquierda",
+        "normal_derecha",
+        "deportivo_derecha",
+        "emergencia_derecha"
+    ]
 }

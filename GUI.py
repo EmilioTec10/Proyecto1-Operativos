@@ -6,7 +6,7 @@ import socket
 
 
 # Constants
-WIDTH, HEIGHT = 1600, 700
+WIDTH, HEIGHT = 1600, 900
 CAR_WIDTH, CAR_HEIGHT = 100, 60
 LEFT_START_X = 10
 RIGHT_START_X = WIDTH - CAR_WIDTH - 10
@@ -16,12 +16,14 @@ CAR_SPACING = 120
 LINES_PARKING = 4
 MOVEMENT = 'none'
 speed = 5
-
+LEFT = 0
+RIGHT = 0
 LENGTH_STREET = 700
 
 ASPHALT_COLOR = (50, 50, 50)
 WHITE = (255, 255, 255)
 YELLOW = (255, 255, 0)
+RED = (255, 0, 0)
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -30,14 +32,7 @@ clock = pygame.time.Clock()
 
 
 # Crear una fuente
-font = pygame.font.SysFont("Arial", 24)
-label_text = "Modo: Equidad | W=3"
-# Crear superficie de texto
-label_surface = font.render(label_text, True, WHITE)  # texto, antialias, color
-
-# Starting conection
-client = socket.socket()
-client.connect(("localhost", 8000))
+font = pygame.font.SysFont("Arial", 20)
 
 
 def parse_data(data_str):
@@ -79,6 +74,9 @@ def draw_sign(direction):
     pygame.draw.rect(screen, (0, 0, 0), (WIDTH//2 - 120, 30, 240, 50))
     screen.blit(label, (WIDTH//2 - label.get_width()//2, 40))
 
+def draw_text(text, pos, color=WHITE):
+    surface = font.render(text, True, color)
+    screen.blit(surface, pos)
 
 def get_car(direction, priority):
     if priority == 0:
@@ -90,6 +88,9 @@ def get_car(direction, priority):
     return image
 
 def main():
+    # Starting conection
+    client = socket.socket()
+    client.connect(("localhost", 8000))
     lines = []
     actual = 0
     x_actual_right = 800 + LENGTH_STREET // 2 + CAR_WIDTH
@@ -116,12 +117,66 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    if LEFT == 5:
+                        error_message = "Solo se pueden agregar 5 carros por lado"
+                    else:
+                        cars_added.append("normal_izquierda")
+                        error_message = "Se agrego un carro normal en la izquierda"
+                        LEFT += 1
+                elif event.key == pygame.K_w:
+                    if LEFT == 5:
+                        error_message = "Solo se pueden agregar 5 carros por lado"
+                    else:
+                        cars_added.append("deportivo_izquierda")
+                        error_message = "Se agrego un carro deportivo en la izquierda"
+                        LEFT += 1
+                elif event.key == pygame.K_e:
+                    if LEFT == 5:
+                        error_message = "Solo se pueden agregar 5 carros por lado"
+                    else:
+                        cars_added.append("emergencia_izquierda")
+                        error_message = "Se agrego un carro de emergencia en la izquierda"
+                        LEFT += 1
+                elif event.key == pygame.K_a:
+                    if LEFT == 5:
+                        error_message = "Solo se pueden agregar 5 carros por lado"
+                    else:
+                        cars_added.append("normal_derecha")
+                        error_message = "Se agrego un carro normal en la derecha"
+                        RIGHT += 1
+                elif event.key == pygame.K_s:
+                    if LEFT == 5:
+                        error_message = "Solo se pueden agregar 5 carros por lado"
+                    else:
+                        cars_added.append("deportivo_derecha")
+                        error_message = "Se agrego un carro deportivo en la derecha"
+                        RIGHT += 1
+                elif event.key == pygame.K_d:
+                    if LEFT == 5:
+                        error_message = "Solo se pueden agregar 5 carros por lado"
+                    else:
+                        cars_added.append("emergencia_derecha")
+                        error_message = "Se agrego un carro de emergencia en la derecha"
+                        RIGHT += 1
+
+
+
         screen.fill(ASPHALT_COLOR)
-        screen.blit(label_surface, (10, 10))
         draw_lane_markings(screen)
 
         # Draw lines
         draw_parking_lines(screen, lines)
+        draw_text("q. Normal en Izquierda", (50, 820))
+        draw_text("w. Deportivo en Izquierda", (300, 820))
+        draw_text("e. Emergencia en Izquierda", (550, 820))
+        draw_text("a. Normal en Derecha", (830, 820))
+        draw_text("s. Deportivo en Derecha", (1050, 820))
+        draw_text("d. Emergencia en Derecha", (1300, 820))
+        draw_text("Presiona la tecla del tipo de carro que desea agregar:", (570, 860))
+        if error_message:
+            draw_text(error_message, (620, 780), RED)
         new_cars = []
         # Draw cars
         for orden, type, direction  in carros:
@@ -172,9 +227,10 @@ def main():
         carros = new_cars
         pygame.display.flip()
 
+
     pygame.quit()
     sys.exit()
-#"""
+
 if __name__ == "__main__":
     main()
-#"""
+

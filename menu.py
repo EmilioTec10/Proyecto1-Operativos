@@ -3,38 +3,40 @@ import json
 import GUI
 
 pygame.init()
-screen = pygame.display.set_mode((1000, 600))
+screen = pygame.display.set_mode((1600, 700))
 pygame.display.set_caption("Menu")
 clock = pygame.time.Clock()
 
 font = pygame.font.SysFont("Arial", 20)
 WHITE, BLACK, RED, YELLOW, GREY = (255,255,255), (0,0,0), (200,0,0), (255, 255, 0), (50, 50, 50)
+RIGHT = 0
+LEFT = 0
+cars_added = []
 
 input_boxes = {
-    "W": {"rect": pygame.Rect(290, 50, 100, 30), "text": "", "active": False},
-    "Letrero": {"rect": pygame.Rect(290, 100, 100, 30), "text": "", "active": False},
-    "LargoCalle": {"rect": pygame.Rect(290, 465, 100, 30), "text": "", "active": False},
-    "Velocidad": {"rect": pygame.Rect(290, 500, 100, 30), "text": "", "active": False},
-    "L-Normal": {"rect": pygame.Rect(290, 190, 50, 30), "text": "", "active": False},
-    "L-Deportivo": {"rect": pygame.Rect(290, 225, 50, 30), "text": "", "active": False},
-    "L-Emergencia": {"rect": pygame.Rect(290, 260, 50, 30), "text": "", "active": False},
-    "R-Normal": {"rect": pygame.Rect(290, 340, 50, 30), "text": "", "active": False},
-    "R-Deportivo": {"rect": pygame.Rect(290, 375, 50, 30), "text": "", "active": False},
-    "R-Emergencia": {"rect": pygame.Rect(290, 410, 50, 30), "text": "", "active": False},
+    "W": {"rect": pygame.Rect(410, 130, 100, 30), "text": "", "active": False},
+    "Letrero": {"rect": pygame.Rect(820, 130, 100, 30), "text": "", "active": False},
+    "LargoCalle": {"rect": pygame.Rect(830, 325, 100, 30), "text": "", "active": False},
+    "Velocidad": {"rect": pygame.Rect(840, 360, 100, 30), "text": "", "active": False}
 }
 
 flow_options = [
-    {"label": "Equidad", "pos": (600, 50), "selected": True},
-    {"label": "Letrero", "pos": (600, 100), "selected": False},
-    {"label": "FIFO",    "pos": (600, 150), "selected": False}
+    {"label": "Equidad", "pos": (400, 80), "selected": True},
+    {"label": "Letrero", "pos": (760, 80), "selected": False},
+    {"label": "FIFO",    "pos": (1150, 80), "selected": False}
 ]
 
 scheduler_options = [
-    {"label": "RR",           "pos": (600, 250), "selected": True},
-    {"label": "Prioridad",    "pos": (600, 285), "selected": False},
-    {"label": "SJF",          "pos": (600, 320), "selected": False},
-    {"label": "FCFS",         "pos": (600, 355), "selected": False},
-    {"label": "Tiempo Real",  "pos": (600, 390), "selected": False}
+    {"label": "RR",           "pos": (340, 270), "selected": True},
+    {"label": "Prioridad",    "pos": (560, 270), "selected": False},
+    {"label": "SJF",          "pos": (780, 270), "selected": False},
+    {"label": "FCFS",         "pos": (1000, 270), "selected": False},
+    {"label": "Tiempo Real",  "pos": (1220, 270), "selected": False}
+]
+car_options = [
+    {"label": "Normal", "pos": (400, 80), "selected": True},
+    {"label": "Deportivo", "pos": (760, 80), "selected": False},
+    {"label": "Emergencia",    "pos": (1150, 80), "selected": False}
 ]
 
 def draw_text(text, pos, color=WHITE):
@@ -55,7 +57,7 @@ def draw_radio_buttons():
         draw_text(option["label"], (option["pos"][0] + 20, option["pos"][1] - 10))
 
 def draw_scheduler_options():
-    draw_text("Calendarización:", (580, 210), WHITE)
+    draw_text("Seleccione el tipo de Calendarización:", (640, 210), WHITE)
     for option in scheduler_options:
         color = YELLOW if option["selected"] else BLACK
         pygame.draw.circle(screen, color, option["pos"], 10)
@@ -90,27 +92,26 @@ running = True
 
 while running:
     screen.fill(GREY)
-    draw_text("Método de control de flujo:", (50, 20))
-    draw_text("W:", (100, 55))
-    draw_text("Tiempo letrero:", (50, 105))
-    draw_text("Cantidad de Carros Izquierda (máx 5):", (50, 160))
-    draw_text("Normal:",     (70, 195))
-    draw_text("Deportivo:",  (70, 230))
-    draw_text("Emergencia:", (70, 275))
-    draw_text("Cantidad de Carros Derecha (máx 5):", (50, 310))
-    draw_text("Normal:",     (70, 345))
-    draw_text("Deportivo:",  (70, 380))
-    draw_text("Emergencia:", (70, 415))
-    draw_text("Ingrese Largo de calle:", (50, 470))
-    draw_text("Ingrese la Velocidad Base:", (50, 505))
+    draw_text("Seleccione Método de control de flujo:", (640, 20))
+    draw_text("W:", (380, 135))
+    draw_text("Tiempo letrero:", (680, 135))
+    draw_text("q. Normal en Izquierda",     (50, 495))
+    draw_text("w. Deportivo en Izquierda",  (300, 495))
+    draw_text("e. Emergencia en Izquierda", (550, 495))
+    draw_text("a. Normal en Derecha",     (830, 495))
+    draw_text("s. Deportivo en Derecha",  (1050, 495))
+    draw_text("d. Emergencia en Derecha", (1300, 495))
+    draw_text("Presiona la tecla del tipo de carro que desea agregar:", (570, 440))
+    draw_text("Ingrese Largo de calle:", (620, 330))
+    draw_text("Ingrese la Velocidad Base:", (600, 365))
 
 
     draw_input_boxes()
     draw_radio_buttons()
     draw_scheduler_options()
-    draw_text("Presiona Enter para continuar...", (350, 575), WHITE)
+    draw_text("Presiona Enter para continuar...", (670, 655), WHITE)
     if error_message:
-        draw_text(error_message, (330, 540), RED)
+        draw_text(error_message, (620, 605), RED)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -124,7 +125,7 @@ while running:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                valid, l_sum, r_sum = validate_counts()
+                #valid, l_sum, r_sum = validate_counts()
                 flujo = next(opt["label"] for opt in flow_options if opt["selected"])
                 scheduler = next(opt["label"] for opt in scheduler_options if opt["selected"])
 
@@ -137,9 +138,9 @@ while running:
                     if not input_boxes["Letrero"]["text"].isdigit() or int(input_boxes["Letrero"]["text"]) > 29:
                         error_message = "Tiempo de letrero debe ser < 30"
                         continue
-                if not valid:
-                    error_message = f"Máx 5 carros por lado. Izq: {l_sum}, Der: {r_sum}"
-                    continue
+                #if not valid:
+                    #error_message = f"Máx 5 carros por lado. Izq: {l_sum}, Der: {r_sum}"
+                    #continue
                 if not input_boxes["LargoCalle"]["text"].isdigit() or not (
                         100 <= int(input_boxes["LargoCalle"]["text"]) <= 500):
                     error_message = "Largo de la calle debe ser un número entre 100 y 500"
@@ -161,21 +162,54 @@ while running:
                         "deportivo": str(base*2),
                         "emergencia": str(base*3)
                     },
-                    "izquierda": {
-                        "normal": input_boxes["L-Normal"]["text"],
-                        "deportivo": input_boxes["L-Deportivo"]["text"],
-                        "emergencia": input_boxes["L-Emergencia"]["text"]
-                    },
-                    "derecha": {
-                        "normal": input_boxes["R-Normal"]["text"],
-                        "deportivo": input_boxes["R-Deportivo"]["text"],
-                        "emergencia": input_boxes["R-Emergencia"]["text"]
-                    }
+                    "cars": cars_added
                 }
                 save_config(config)
                 print("Configuración guardada exitosamente.")
                 running = False
                 GUI.main()
+            elif event.key == pygame.K_q:
+                if LEFT == 5:
+                    error_message = "Solo se pueden agregar 5 carros por lado"
+                else:
+                    cars_added.append("normal_izquierda")
+                    error_message = "Se agrego un carro normal en la izquierda"
+                    LEFT += 1
+            elif event.key == pygame.K_w:
+                if LEFT == 5:
+                    error_message = "Solo se pueden agregar 5 carros por lado"
+                else:
+                    cars_added.append("deportivo_izquierda")
+                    error_message = "Se agrego un carro deportivo en la izquierda"
+                    LEFT += 1
+            elif event.key == pygame.K_e:
+                if LEFT == 5:
+                    error_message = "Solo se pueden agregar 5 carros por lado"
+                else:
+                    cars_added.append("emergencia_izquierda")
+                    error_message = "Se agrego un carro de emergencia en la izquierda"
+                    LEFT += 1
+            elif event.key == pygame.K_a:
+                if LEFT == 5:
+                    error_message = "Solo se pueden agregar 5 carros por lado"
+                else:
+                    cars_added.append("normal_derecha")
+                    error_message = "Se agrego un carro normal en la derecha"
+                    RIGHT += 1
+            elif event.key == pygame.K_s:
+                if LEFT == 5:
+                    error_message = "Solo se pueden agregar 5 carros por lado"
+                else:
+                    cars_added.append("deportivo_derecha")
+                    error_message = "Se agrego un carro deportivo en la derecha"
+                    RIGHT += 1
+            elif event.key == pygame.K_d:
+                if LEFT == 5:
+                    error_message = "Solo se pueden agregar 5 carros por lado"
+                else:
+                    cars_added.append("emergencia_derecha")
+                    error_message = "Se agrego un carro de emergencia en la derecha"
+                    RIGHT += 1
             else:
                 for box in input_boxes.values():
                     if box["active"]:
