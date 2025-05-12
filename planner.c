@@ -49,25 +49,52 @@ static void* worker(void *arg)
     CEmutex_unlock(&print_lock);
 
     if (modo_flujo_equity) {
-        // 🟢 Algoritmo de flujo: Equidad
-        equity_request_pass(ctx->from_left);
+         // 🟢 Control de flujo por equidad
+        equity_request_pass(ctx->from_left, ctx->is_rr);
 
-        for (int i = 0; i < ctx->job.work; ++i) {
-            CEmutex_lock(&g_lock);
-            g_counter++;
-            avanzar_carro(ctx->job.id, i, ctx->from_left);  // Podés personalizar esta función
-            CEmutex_unlock(&g_lock);
-            usleep(100000);  // Velocidad de cruce
+        if (ctx->is_rr) {
+            while (ctx->done < ctx->job.work) {
+                CEmutex_lock(&ctx->pause_lock);  // Espera su turno RR
+
+                int slice = ctx->job.work - ctx->done;
+                if (slice > ctx->quantum)
+                    slice = ctx->quantum;
+
+                for (int i = 0; i < slice; ++i) {
+                    CEmutex_lock(&g_lock);
+                    avanzar_carro(ctx->job.id, ctx->done, ctx->from_left);
+                    ctx->done++;
+                    g_counter++;
+                    CEmutex_unlock(&g_lock);
+                    usleep(100000);
+                }
+
+                scheduler_rr_report(getpid(), slice);
+
+                // Si terminó, salir del ciclo
+                if (ctx->done >= ctx->job.work)
+                    break;
+            }
+        } else {
+            for (int i = 0; i < ctx->job.work; ++i) {
+                CEmutex_lock(&g_lock);
+                avanzar_carro(ctx->job.id, i, ctx->from_left);
+                g_counter++;
+                CEmutex_unlock(&g_lock);
+                usleep(100000);
+            }
         }
 
-        equity_leave();
+        equity_leave(ctx->is_rr);
     } else {
         // 🔵 Algoritmo de planificación tradicional (FCFS, RR, etc.)
         while (ctx->done < ctx->job.work)
         {
             /* ► Esperar turno en RR */
-            if (ctx->is_rr)
+            if (ctx->is_rr){
                 CEmutex_lock(&ctx->pause_lock);   /* bloquea hasta que el scheduler lo suelte */
+            }
+               
 
             /* ► Ejecutar un quantum ----------------------------------- */
             int slice = ctx->job.work - ctx->done;
@@ -161,8 +188,13 @@ void ce_run_plan(const CE_Job jobs[], int n,
         
             // Ejecutar lote de W hilos del lado actual
             while (lote < W) {
-                if ((lado == 1 && !scheduler_has_threads_left()) ||
-                    (lado == 0 && !scheduler_has_threads_right())) break;
+                printf("tiene threads %d\n", scheduler_has_threads_left());
+                int pendientes = 0;
+                for (int i = 0; i < n; ++i) {
+                    if (ctx[i].from_left == lado && !ctx[i].terminado)
+                        pendientes++;
+                }
+                if (pendientes == 0) break;
         
                 CEthread_t next = (lado == 1)
                     ? scheduler_next_thread_from_left()
@@ -173,10 +205,32 @@ void ce_run_plan(const CE_Job jobs[], int n,
                     if (thr[i].tid == next.tid) { c = &ctx[i]; break; }
         
                 if (c && !c->terminado) {
-                    CEmutex_unlock(&c->start_lock);
-                    CEthread_join(next);
-                    c->terminado = 1;
-                    lote++;
+                    CEmutex_unlock(&c->start_lock); // solo al inicio
+
+                    if (c->is_rr) {
+                        // 🔓 Desbloquea solo su quantum
+                        printf("🟢 Desbloqueando hilo ID=%d (TID=%d) para ejecutar quantum\n", c->job.id, next.tid);
+                        CEmutex_unlock(&c->pause_lock);
+
+                        usleep(quantum_rr * 100000); // Espera a que termine su quantum
+
+                        if (c->done >= c->job.work) {
+                            CEthread_join(next);
+                            c->terminado = 1;
+                            lote++;
+                        } else {
+                        // 🔁 Reinsertar en el scheduler para el próximo turno
+                        scheduler_add_thread(next,
+                                            c->job.work,
+                                            c->job.priority,
+                                            c->job.deadline,
+                                            c->from_left);
+                        }
+                    } else {
+                        CEthread_join(next);
+                        c->terminado = 1;
+                        lote++;
+                    }
                 }
             }
         

@@ -25,7 +25,7 @@ void equity_init(int w_param) {
     CEmutex_init(&can_pass);
 }
 
-void equity_request_pass(int from_left) {
+void equity_request_pass(int from_left, int is_rr) {
     int my_dir = from_left ? 0 : 1;
     pid_t tid = getpid();
 
@@ -66,7 +66,6 @@ void equity_request_pass(int from_left) {
         }
 
         if (can_pass) {
-            passed++;
             crossing++;
             if (from_left) waiting_left--;
             else waiting_right--;
@@ -83,14 +82,18 @@ void equity_request_pass(int from_left) {
     }
 }
 
-void equity_leave() {
+void equity_leave(int is_rr) {
     CEmutex_lock(&lock);
     crossing--;
+    passed++;
 
     int current_waiting = (current_dir == 0) ? waiting_left : waiting_right;
     int opposite_waiting = (current_dir == 0) ? waiting_right : waiting_left;
 
-    if (crossing == 0) {
+    printf("✅ [TID %d] SALE de cruzar desde %s\n", getpid(),
+               current_dir == 0 ? "Izquierda" : "Derecha");
+    if (crossing == 0 || is_rr == 1) {
+        
         // condición 1: se alcanzó el W → cambio normal
         if (passed >= w) {
             if (opposite_waiting > 0 || current_waiting == 0) {

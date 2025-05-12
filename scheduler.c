@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 #define MAX_THREADS 100
 
@@ -101,7 +102,11 @@ static int select_index(ScheduledThread *queue, int size) {
             }
         } break;
 
-        case SCHED_CE_RR:
+        case SCHED_CE_RR: {     
+            idx = 0;
+            break;
+        }
+
         default:
             idx = 0;
             break;
@@ -121,6 +126,7 @@ CEthread_t scheduler_next_thread_from_left(void) {
     CEthread_t next = ready_left[idx].thread;
     for (int i = idx; i < size_left - 1; ++i)
         ready_left[i] = ready_left[i + 1];
+        printf("[scheduler] Siguiente hilo desde izquierda: ID=%d\n", ready_left[idx].thread.tid);
     size_left--;
     CEmutex_unlock(&sched_lock);
     return next;
@@ -184,3 +190,30 @@ void scheduler_debug_print_right_queue(void) {
     }
     CEmutex_unlock(&sched_lock);
 }
+
+void scheduler_debug_print_queue(const char* lado) {
+    CEmutex_lock(&sched_lock);
+
+    ScheduledThread* queue;
+    int size;
+
+    if (strcmp(lado, "izquierda") == 0) {
+        queue = ready_left;
+        size = size_left;
+    } else {
+        queue = ready_right;
+        size = size_right;
+    }
+
+    printf("[DEBUG] Cola %s (%d hilos):\n", lado, size);
+    for (int i = 0; i < size; ++i) {
+        printf("  -> ID=%d | TID=%d | est_time=%d | remaining=%d\n",
+            queue[i].thread.tid,
+            queue[i].thread.tid,
+            queue[i].estimated_time,
+            queue[i].remaining_work);
+    }
+
+    CEmutex_unlock(&sched_lock);
+}
+
