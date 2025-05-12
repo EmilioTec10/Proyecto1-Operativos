@@ -34,5 +34,5 @@ make
 
 ### 5. Ejecutar el programa
 ```bash
-./Proyecto1_Operativos
+./proyecto1
 ```

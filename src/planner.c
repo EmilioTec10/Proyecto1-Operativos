@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "planner.h"
-#include "CEthreads.h"
-#include "scheduler.h"
-#include "flow_equity.h"
-#include "flow_fifo.h"
+#include "../include/planner.h"
+#include "../include/CEthreads.h"
+#include "../include/scheduler.h"
+#include "../include/flow_equity.h"
+#include "../include/flow_fifo.h"
 
 typedef struct {
     CE_Job    job;          // ya estaba
@@ -20,9 +20,7 @@ typedef struct {
     CEmutex_t permiso_paso; // 👈 NUEVO: semáforo para autorizar cruce
 } WorkerCtx;
 
-int modo_flujo_equity = 1; // o 0, según el algoritmo de flujo elegido
-
-flow_control_mode current_flow_mode = FLOW_FIFO; // Valor por defecto
+flow_control_mode current_flow_mode = FLOW_EQUITY; // Valor por defecto
 
 /* -------- recurso compartido de demostración ---------------------- */
 static int      g_counter = 0;

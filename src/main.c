@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "planner.h"
+#include "../include/planner.h"
 
 // Globales requeridas (aunque no se usen con SJF)
 int W = 2;
@@ -26,7 +26,13 @@ int main() {
     jobs[5] = (CE_Job){ .id = 5, .work = 5, .priority = 1, .deadline = 10, .from_left = 0 };
 
     // Ejecución con algoritmo SJF (Shortest Job First)
-    ce_run_plan(jobs, 6, SCHED_CE_SJF, 0, W);
+    ce_run_plan(jobs, 6, SCHED_CE_FCFS, 0, W);
+
+    // SCHED_CE_FCFS
+    // SCHED_CE_SJF
+    // SCHED_CE_PRIORITY
+    // SCHED_CE_RR
+    // SCHED_CE_REALTIME
 
     return 0;
 }

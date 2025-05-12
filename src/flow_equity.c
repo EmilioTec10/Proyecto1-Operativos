@@ -1,15 +1,15 @@
 #include <stdio.h>     
 #include <unistd.h>    
-#include "flow_equity.h"
-#include "CEthreads.h"
-#include "scheduler.h"
+#include "../include/flow_equity.h"
+#include "../include/CEthreads.h"
+#include "../include/scheduler.h"
 
 static int w; // cantidad de carros por turno
 static int passed = 0;
 static int current_dir = 0; // 0: izquierda->derecha, 1: derecha->izquierda
 static int waiting_left = 0, waiting_right = 0;
 static int crossing = 0;     // carros cruzando actualmente
-static int active_tid = -1;  // TID del hilo que tiene permiso a cruzar
+// static int active_tid = -1;  // TID del hilo que tiene permiso a cruzar
 
 
 static CEmutex_t lock;

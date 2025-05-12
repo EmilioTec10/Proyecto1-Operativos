@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "flow_fifo.h"
-#include "CEthreads.h"   // para getpid() y CEmutex
+#include "../include/flow_fifo.h"
+#include "../include/CEthreads.h"   // para getpid() y CEmutex
 
 // Nodo de la cola FIFO
 typedef struct Node {

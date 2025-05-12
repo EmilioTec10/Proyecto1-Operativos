@@ -1,4 +1,4 @@
-#include "scheduler.h"
+#include "../include/scheduler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -136,9 +136,14 @@ CEthread_t scheduler_next_thread_from_right(void) {
     }
     int idx = select_index(ready_right, size_right);
     CEthread_t next = ready_right[idx].thread;
-    for (int i = idx; i < size_right - 1; ++i)
+    
+    // El bucle solo mueve los elementos
+    for (int i = idx; i < size_right - 1; ++i) {
         ready_right[i] = ready_right[i + 1];
-        printf("[scheduler] Siguiente hilo desde derecha: ID=%d\n", ready_right[idx].thread.tid);
+    }
+    
+    // Fuera del bucle - imprime información sobre el hilo seleccionado
+    printf("[scheduler] Siguiente hilo desde derecha: ID=%d\n", next.tid);
 
     size_right--;
     CEmutex_unlock(&sched_lock);
