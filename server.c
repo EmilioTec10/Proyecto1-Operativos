@@ -31,13 +31,10 @@ void start_server() {
 
         for (int i = 0; i < num_cars; i++) {
             offset += snprintf(buffer + offset, sizeof(buffer) - offset,
-                "%d,%d,%d,%d,%d,%d;",
-                cars[i].x,
-                cars[i].y,
-                cars[i].speed,
-                cars[i].moving,
-                cars[i].direction,
-                cars[i].priority
+                "%d,%d,%d;",
+                cars[i].orden,
+                cars[i].type,
+                cars[i].direction
             );        }
 
         send(client_fd, buffer, strlen(buffer), 0);

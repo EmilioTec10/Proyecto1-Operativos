@@ -1,9 +1,10 @@
 import pygame
 import json
+import GUI
 
 pygame.init()
 screen = pygame.display.set_mode((1000, 600))
-pygame.display.set_caption("Configuración Inicial Extendida")
+pygame.display.set_caption("Menu")
 clock = pygame.time.Clock()
 
 font = pygame.font.SysFont("Arial", 20)
@@ -174,6 +175,7 @@ while running:
                 save_config(config)
                 print("Configuración guardada exitosamente.")
                 running = False
+                GUI.main()
             else:
                 for box in input_boxes.values():
                     if box["active"]:

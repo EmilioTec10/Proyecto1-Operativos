@@ -4,12 +4,10 @@
 #include <pthread.h>
 
 typedef struct {
-    int x;
-    int y;
-    int speed;
-    int priority;
-    bool moving;
+    int orden;
+    int type;
     bool direction;
+    int speed;
 } Car;
 
 extern Car cars[];

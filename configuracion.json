@@ -5,9 +5,9 @@
     "tiempo_letrero": "",
     "largo_calle": "100",
     "velocidad": {
-        "normal": "10",
-        "deportivo": "20",
-        "emergencia": "30"
+        "normal": "20",
+        "deportivo": "40",
+        "emergencia": "60"
     },
     "izquierda": {
         "normal": "",
