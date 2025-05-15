@@ -245,8 +245,8 @@ def update_canvas():
     font_text = ("Arial", size_font, "bold")
     x = 2 * tile_width
     y = 0 * tile_height
-    canvas.create_image(x,y, anchor='nw', image=tk_direction_image)
-    canvas.create_text(x+tile_width//2, y+tile_height//2, text="Direccion", font=font_text)
+    canvas.create_image(x+x,y, anchor='nw', image=tk_direction_image)
+    canvas.create_text(x+x+tile_width//2, y+10+tile_height//2, text="Dirección", font=font_text)
 
     x = 2*tile_width
     y = (num_rows-1)*tile_height
@@ -389,8 +389,8 @@ root = tk.Tk()
 root.title("Python GUI Client")
 
 # Set window size
-window_width = 800
-window_height = 600
+window_width = 900
+window_height = 500
 root.geometry(f"{window_width}x{window_height}")
 
 # Create canvas
