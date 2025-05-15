@@ -1,191 +1,92 @@
-#include "../include/scheduler.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "scheduler.h"
 
-#define MAX_THREADS 100
+int comparar_por_tiempo(const void *a, const void *b) {
+  car *p1 = (car *)a;
+  car *p2 = (car *)b;
+  return p1->tiempo_total - p2->tiempo_total;
+}
 
-static ScheduledThread ready_left[MAX_THREADS];
-static ScheduledThread ready_right[MAX_THREADS];
-static int size_left = 0;
-static int size_right = 0;
+int comparar_por_prioridad(const void *a, const void *b) {
+  car *p1 = (car *)a;
+  car *p2 = (car *)b;
+  return p1->typecar - p2->typecar;
+}
 
-static CE_scheduler_mode_t current_mode;
-static CEmutex_t sched_lock;
+int round_robin(car *procesos, int num_procesos, size_t size_struct) {
+  // Ensure there are at least two processes to rotate
+  if (num_procesos <= 1) {
+    return 0;  // No rotation needed
+  }
 
-void scheduler_init(CE_scheduler_mode_t mode) {
-    current_mode = mode;
-    size_left = size_right = 0;
-    CEmutex_init(&sched_lock);
+  // Temporary storage for the first process
+  car temp;
 
-    printf("[scheduler] Algoritmo inicializado: ");
-    switch (mode) {
-        case SCHED_CE_FCFS:     puts("FCFS");        break;
-        case SCHED_CE_SJF:      puts("SJF");         break;
-        case SCHED_CE_PRIORITY: puts("PRIORITY");    break;
-        case SCHED_CE_REALTIME: puts("REALTIME");    break;
-        case SCHED_CE_RR:       puts("Round Robin"); break;
-        default:                puts("Desconocido");
+  // Copy the first process into the temporary variable
+  memcpy(&temp, procesos, size_struct);
+
+  // Shift all processes one position forward
+  memmove(procesos, procesos + 1, (num_procesos - 1) * size_struct);
+
+  // Place the first process at the end of the array
+  memcpy(procesos + (num_procesos - 1), &temp, size_struct);
+
+  return 0;  // Indicate successful operation
+}
+
+void adjustPatrol(car *procesos, int num_procesos) {
+  int i = 0;
+  for (int j = 0; j < num_procesos; j++) {
+    if (procesos[j].typecar == 3) {  // Ambulancia
+      car tempboat = procesos[j];
+      for (int k = j; i < k; k--) {  // Corrimiento de la lista
+        procesos[k] = procesos[k - 1];
+      }
+      procesos[i] = tempboat;  // Colocacion de la patrulla en el top
+      i++;
     }
+  }
 }
 
-void scheduler_add_thread(CEthread_t th, int est_time, int prio, int deadline, int from_left) {
-    CEmutex_lock(&sched_lock);
+bool RealTime(car *procesos, int num_procesos, car slowestcar) {
+  if (1 < num_procesos) {  // La cantidad de carros significa que al menos uno
+                           // 
+    return false;
+  }
+  if (procesos[0].tiempo_total <= slowestcar.tiempo_restante &&
+      slowestcar.ID != -1) {  // No le da tiempo de cruzar y cumplir el quantum
+    printf("Tiempo real incumplido por barco en street (%f,%f)\n",
+           procesos[0].tiempo_total, slowestcar.tiempo_restante);
+    return false;
+  }
+  return true;
+}
 
-    printf("[scheduler] Hilo ID=%d agregado al lado %s. Total=%d\n",
-        th.tid, from_left ? "Izquierda" : "Derecha", from_left ? size_left : size_right);
- 
-
-    ScheduledThread st = {
-        .thread = th,
-        .estimated_time = est_time,
-        .priority = prio,
-        .remaining_work = est_time,
-        .arrival_time = (int)time(NULL),
-        .deadline = deadline
-    };
-
-    if (from_left) {
-        if (size_left >= MAX_THREADS) {
-            fprintf(stderr, "[scheduler] Cola izquierda llena\n");
-            CEmutex_unlock(&sched_lock);
-            return;
-        }
-        ready_left[size_left++] = st;
-    } else {
-        if (size_right >= MAX_THREADS) {
-            fprintf(stderr, "[scheduler] Cola derecha llena\n");
-            CEmutex_unlock(&sched_lock);
-            return;
-        }
-        ready_right[size_right++] = st;
+bool scheduler(int option, car *procesos, int num_procesos, car slowestcar) {
+  switch (option) {
+    case 1: {
+      break;
     }
-
-    CEmutex_unlock(&sched_lock);
-    printf("[scheduler] Hilo agregado al lado %s. Total=%d\n", from_left ? "Izquierda" : "Derecha", from_left ? size_left : size_right);
-}
-
-static int select_index(ScheduledThread *queue, int size) {
-    if (current_mode == SCHED_CE_FCFS || size == 0)
-        return 0;
-
-    int idx = 0;
-    switch (current_mode) {
-        case SCHED_CE_SJF: {
-            int best = queue[0].estimated_time;
-            for (int i = 1; i < size; ++i) {
-                if (queue[i].estimated_time < best) {
-                    best = queue[i].estimated_time;
-                    idx = i;
-                }
-            }
-        } break;
-
-        case SCHED_CE_PRIORITY: {
-            int best = queue[0].priority;
-            for (int i = 1; i < size; ++i) {
-                if (queue[i].priority < best) {
-                    best = queue[i].priority;
-                    idx = i;
-                }
-            }
-        } break;
-
-        case SCHED_CE_REALTIME: {
-            int best = queue[0].deadline;
-            for (int i = 1; i < size; ++i) {
-                if (queue[i].deadline < best) {
-                    best = queue[i].deadline;
-                    idx = i;
-                }
-            }
-        } break;
-
-        case SCHED_CE_RR:
-        default:
-            idx = 0;
-            break;
+    case 2: {
+      // Ordenar procesos por tiempo de ejecución
+      qsort(procesos, num_procesos, sizeof(car), comparar_por_tiempo);
+      break;
     }
-
-    return idx;
-}
-
-CEthread_t scheduler_next_thread_from_left(void) {
-    CEmutex_lock(&sched_lock);
-    if (size_left == 0) {
-        CEmutex_unlock(&sched_lock);
-        fprintf(stderr, "[scheduler] Cola izquierda vacía\n");
-        exit(1);
+    case 3: {
+      // Ordenar procesos por tiempo de ejecución
+      qsort(procesos, num_procesos, sizeof(car), comparar_por_prioridad);
+      break;
     }
-    int idx = select_index(ready_left, size_left);
-    CEthread_t next = ready_left[idx].thread;
-    for (int i = idx; i < size_left - 1; ++i)
-        ready_left[i] = ready_left[i + 1];
-    size_left--;
-    CEmutex_unlock(&sched_lock);
-    return next;
-}
-
-CEthread_t scheduler_next_thread_from_right(void) {
-    CEmutex_lock(&sched_lock);
-    
-    if (size_right == 0) {
-        CEmutex_unlock(&sched_lock);
-        fprintf(stderr, "[scheduler] Cola derecha vacía\n");
-        exit(1);
+    case 4: {
+      round_robin(procesos, num_procesos, sizeof(car));
+      break;
     }
-    int idx = select_index(ready_right, size_right);
-    CEthread_t next = ready_right[idx].thread;
-    
-    // El bucle solo mueve los elementos
-    for (int i = idx; i < size_right - 1; ++i) {
-        ready_right[i] = ready_right[i + 1];
+    case 5: {
+      bool response = (RealTime(procesos, num_procesos, slowestcar));
+      return response;
     }
-    
-    // Fuera del bucle - imprime información sobre el hilo seleccionado
-    printf("[scheduler] Siguiente hilo desde derecha: ID=%d\n", next.tid);
-
-    size_right--;
-    CEmutex_unlock(&sched_lock);
-    return next;
-}
-
-int scheduler_has_threads_left(void) {
-    CEmutex_lock(&sched_lock);
-    int result = (size_left > 0);
-    CEmutex_unlock(&sched_lock);
-    return result;
-}
-
-int scheduler_has_threads_right(void) {
-    CEmutex_lock(&sched_lock);
-    int result = (size_right > 0);
-    CEmutex_unlock(&sched_lock);
-    return result;
-}
-
-
-int scheduler_has_threads(void) {
-    CEmutex_lock(&sched_lock);
-    int alive = (size_left + size_right > 0);
-    CEmutex_unlock(&sched_lock);
-    return alive;
-}
-
-void scheduler_rr_report(pid_t tid, int unidades) {
-    // Si más adelante querés usar RR por lado, implementalo aquí
-    (void)tid;
-    (void)unidades;
-}
-
-void scheduler_debug_print_right_queue(void) {
-    CEmutex_lock(&sched_lock);
-    printf("[DEBUG] Contenido de la cola derecha (%d hilos):\n", size_right);
-    for (int i = 0; i < size_right; ++i) {
-        printf("  -> Hilo ID=%d | TID=%d | est_time=%d\n",
-               ready_right[i].thread.tid,
-               ready_right[i].thread.tid,
-               ready_right[i].estimated_time);
-    }
-    CEmutex_unlock(&sched_lock);
+    default:
+      break;
+  }
+  adjustPatrol(procesos, num_procesos);
+  return true;
 }

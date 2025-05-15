@@ -1,42 +1,31 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include "CEthreads.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-typedef enum {
-    SCHED_CE_FCFS,
-    SCHED_CE_SJF,
-    SCHED_CE_PRIORITY,
-    SCHED_CE_RR,
-    SCHED_CE_REALTIME
-} CE_scheduler_mode_t;
+#include "../lib/CEthreads.h"
+
+#define QUANTUM_mSEC 3000
 
 typedef struct {
-    CEthread_t thread;
-    int estimated_time;
-    int priority;
-    int remaining_work;
-    int deadline;
-    int arrival_time;
-} ScheduledThread;
+  CEthread_t thread;
+  int ID;
+  int position;
+  int speed;
+  float tiempo_total;
+  float tiempo_restante;
+  // Sirve de typecar
+  int typecar;  // type: 1 Normal
+                 //       2 Deportivo
+                 //       3 Ambulancia
+  bool Permission;
 
-#define CE_RR_QUANTUM  5
+} car;
 
-void  scheduler_init(CE_scheduler_mode_t mode);
-void  scheduler_add_thread(CEthread_t thread,
-                           int estimated_time,
-                           int priority,
-                           int deadline,
-                           int from_left); // nuevo parámetro para doble cola
-CEthread_t scheduler_next_thread_from_left(void);
-CEthread_t scheduler_next_thread_from_right(void);
-int scheduler_has_threads_left(void);
-int scheduler_has_threads_right(void);
-int   scheduler_has_threads(void);
-void  scheduler_rr_report(pid_t tid,int unidades);
-void scheduler_debug_print_right_queue(void);
+bool scheduler(int option, car *procesos, int num_procesos, car slowestcar);
 
-void scheduler_cleanup(void);
-
-
-#endif
+#endif  // CALENDAR_H
