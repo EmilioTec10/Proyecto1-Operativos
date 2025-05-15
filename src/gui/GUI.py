@@ -130,13 +130,13 @@ def import_images():
     global car_images, asphalt_image, sea_image, direction_image, yellow_light_image_false, yellow_light_image_true, real_time_image_false, real_time_image_true
     # Car images
     car_images = {
-        1: Image.open(file_directory + "images/car1.png"),
-        2: Image.open(file_directory + "images/car2.png"),
-        3: Image.open(file_directory + "images/car5.png")
+        1: Image.open(file_directory + "images/normal.png"),
+        2: Image.open(file_directory + "images/sports.png"),
+        3: Image.open(file_directory + "images/ambulance.png")
     }
 
     # Background images
-    sea_image = Image.open(file_directory + "images/calle.png")
+    sea_image = Image.open(file_directory + "images/street.png")
     asphalt_image = Image.new('RGB', (100, 100), color='gray')  # Placeholder for gray tile
 
     ## Flags images

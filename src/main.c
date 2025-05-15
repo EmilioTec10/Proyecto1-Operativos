@@ -5,7 +5,7 @@
 #include "lib/CEthreads.h"
 
 int main() {
-  printf("Welcome to Scheduling Cars!\n");
+  printf("Welcome to Scheduling Cars! 🚗 🏎️ 🚨\n");
   street_tryout();
   return 0;
 }

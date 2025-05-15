@@ -445,7 +445,7 @@ void streetcontent() {
 void CarGUI() {
   char respuesta[100];  // Buffer para almacenar el nombre
   int cartype = 1;
-  const char *carstrings[] = {"Normal", "Pesquero", "Patrulla"};
+  const char *carstrings[] = {"Normal", "Deportivo", "Ambulancia"};
   char miString[3];
 
   // GUI Mensaje inicial

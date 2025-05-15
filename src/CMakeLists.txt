@@ -37,18 +37,10 @@ target_link_libraries(${PROJECT_NAME} CEthreads scheduler)
 # DEPENDS indica que este comando depende del archivo fuente original
 # COMMENT proporciona un mensaje informativo durante la compilación
 add_custom_command(
-    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gui.py
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/gui/gui.py ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gui.py
-    DEPENDS ${CMAKE_SOURCE_DIR}/src/gui/gui.py
+    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/GUI.py
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/gui/GUI.py ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gui.py
+    DEPENDS ${CMAKE_SOURCE_DIR}/src/gui/GUI.py
     COMMENT "Copiando gui.py al directorio de salida de ejecución"
-)
-
-# Copia hardware.py al directorio de salida de ejecución si es modificado
-add_custom_command(
-    OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/hardware.py
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/src/hardware/hardware.py ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/hardware.py
-    DEPENDS ${CMAKE_SOURCE_DIR}/src/hardware/hardware.py
-    COMMENT "Copiando hardware.py al directorio de salida de ejecución"
 )
 
 # Copia street.config al directorio de salida de ejecución si es modificado
@@ -68,8 +60,7 @@ add_custom_command(
 # archivos de salida definidos en los comandos anteriores
 # ALL asegura que este objetivo sea ejecutado por defecto al compilar
 add_custom_target(copy_files ALL
-    DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gui.py
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/hardware.py
+    DEPENDS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/GUI.py
             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/street/street.config
 )
 
