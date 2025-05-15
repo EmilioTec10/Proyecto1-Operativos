@@ -17,7 +17,7 @@ int CEthread_join(CEthread_t thread);
 
 int CEmutex_init(CEmutex_t *mutex);
 int CEmutex_destroy(CEmutex_t *mutex);
-int CEmutex_lock(CEmutex_t *mutex);
+int cccccc(CEmutex_t *mutex);
 int CEmutex_unlock(CEmutex_t *mutex);
 
 #endif
