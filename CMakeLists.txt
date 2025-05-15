@@ -1,29 +1,31 @@
-cmake_minimum_required(VERSION 3.16)
-project(PROYECTO1_OPERATIVO C)
+# Configuración básica del proyecto
+cmake_minimum_required(VERSION 3.10.0)  # Versión con soporte para modernas políticas y características
 
-# Opciones de compilación
-set(CMAKE_C_STANDARD 11)
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+# Definición principal del proyecto
+project(schedulingCars)  # Establece variables importantes: PROJECT_NAME, CMAKE_PROJECT_NAME, etc.
 
-# Incluir el directorio de cabeceras
-include_directories(include)
+# Configuración de definiciones de compilador
+add_definitions(-D_GNU_SOURCE)  # Habilita extensiones GNU para acceso a características específicas
+                                # (Ej: pthread_setname_npc en Linux, strdup, etc.)
 
-# Crear una biblioteca con todo el código excepto main.c
-# Esto permite que los tests usen las mismas funciones que el programa principal
-set(LIB_SOURCES
-    src/CEthreads.c
-    src/scheduler.c
-    src/planner.c
-    src/flow_equity.c
-    src/flow_fifo.c
-)
-add_library(proyecto_lib STATIC ${LIB_SOURCES})
-target_include_directories(proyecto_lib PUBLIC include)
+# Configuración de directorios de salida
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)  # Todos los ejecutables se generarán en /bin
+                                                             # dentro del directorio de build
 
-# Crear el ejecutable principal usando la biblioteca
-add_executable(proyecto1 src/main.c)
-target_link_libraries(proyecto1 proyecto_lib)
+# Configuración del lenguaje
+enable_language(C)  # Asegura el soporte para C (normalmente detectado automáticamente)
+set(CMAKE_C_STANDARD 11)  # Requiere el estándar C11 (características como _Generic, static_assert, etc.)
 
-# Habilitar testing y añadir la carpeta tests
-enable_testing()
-add_subdirectory(tests)
+# Integración con CTest para pruebas
+#include(CTest)  # Habilita el sistema de testing de CMake (permite add_test, ctest commands)
+
+# Estructura del proyecto
+add_subdirectory(src)  # Incluye el subdirectorio donde están los componentes principales
+                       # (asume que contiene CMakeLists.txt para bibliotecas/ejecutables)
+
+# Gestión de variables del proyecto
+set(PROJECT_NAME ${CMAKE_PROJECT_NAME})  # Crea alias para uso consistente en todo el proyecto
+
+# Gestión de recursos
+file(COPY images/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/images/)  # Copia recursos al directorio de salida
+                                                                          # (útil para acceso en tiempo de ejecución)
