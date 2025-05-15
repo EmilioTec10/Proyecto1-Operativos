@@ -456,7 +456,7 @@ void CarGUI() {
         "    c:    🚨 Carro emergencia\n\n"
         "    r:    ⏩ Agregar barco a la derecha\n"
         "    l:    ⏪ Agregar barco a la izquierda\n\n"
-        "    q: ❌ Terminar el programa\n"
+        "    q: ❌ Cerrar el server\n"
         "Ingrese su elección: ");
   scanf("%99s", respuesta);
 
@@ -557,7 +557,7 @@ void *Street_Schedule(void *arg) {
         CheckRealTime();
         EnterStreet(0, !Street.direction);
       }
-    } else if (Street.street_scheduling == 3) {  // Modo tico
+    } else if (Street.street_scheduling == 3) {  // Modo FIFO
       if (Street.direction) {
         if (left_street.capacity == 0) {
           YellowStreet();
