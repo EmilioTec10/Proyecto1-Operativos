@@ -99,7 +99,18 @@ Después de que 2 vehículos hayan cruzado, la dirección cambiará
 Las ambulancias siguen teniendo prioridad por la función adjustPatrol
 La variable QUANTUM_mSEC (definida como 3000) determina el tiempo que cada vehículo puede moverse antes de ceder el turno
 
-### Modo W con Tiempo Real (t_schedule=5)
+### 5. Modo W con Tiempo Real (t_schedule=5)
+
+Garantías estrictas: El sistema es de "tiempo real duro" (hard real-time), ya que cualquier retraso se considera un fallo (se establece TiempoReal = false).
+Condiciones para tiempo real:
+
+- No debe haber más de un vehículo esperandor
+- El vehículo esperando debe poder cruzar antes de que termine el vehículo más lento en la calle
+- No debe haber vehículos esperando en la dirección opuesta durante el cambio de luz
+- No debe haber bloqueos en la calle (un vehículo impedido para avanzar)
+
+
+Indicador de estado: El flag Street.TiempoReal actúa como un indicador que muestra si el sistema ha logrado mantener sus garantías de tiempo real hasta el momento.
 
 ```bash
 c_schedule=1  # Modo W

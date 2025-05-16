@@ -183,7 +183,7 @@ def update_canvas():
     multiplier_font = (canvas_width*canvas_height)//(window_width*window_height)
 
     if len(street) == 0:
-        canvas.create_text(canvas_width // 2, canvas_height // 2, text="Waiting for information...", font=("Arial", 24*multiplier_font))
+        canvas.create_text(canvas_width // 2, canvas_height // 2, text="Presiona una tecla en el server..", font=("Arial", 24*multiplier_font))
         return
 
     # Determine the size of each tile
@@ -248,15 +248,15 @@ def update_canvas():
     canvas.create_image(x+x,y, anchor='nw', image=tk_direction_image)
     canvas.create_text(x+x+tile_width//2, y+10+tile_height//2, text="Dirección", font=font_text)
 
-    x = 2*tile_width
+    x = ((num_columns-1-2)*tile_width) - 10
     y = (num_rows-1)*tile_height
     canvas.create_image(x, y, anchor='nw', image=tk_yellow_light_image)
-    canvas.create_text(x+tile_width//2, y+tile_height//2, text="Puede Pasar", font=font_text)
+    canvas.create_text(x+tile_width//2, y+10+tile_height//2, text="Paso", font=font_text)
 
-    x = (num_columns-1-2)*tile_width
+    x = (2*tile_width) + 10
     y = (num_rows-1)*tile_height
     canvas.create_image(x, y, anchor='nw', image=tk_real_time_image)
-    canvas.create_text(x+tile_width//2, y+tile_height//2, text="Tiempo Real", font=font_text)
+    canvas.create_text(x+tile_width//2, y+10+tile_height//2, text="Tiempo Real", font=font_text)
 
 
     ####--------------------- DRAW WAITING LEFT CARS ---------------------####

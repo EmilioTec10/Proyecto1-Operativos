@@ -317,14 +317,14 @@ void waitline_create() {
 
 void addcardummy(bool right, int type) {
   CEthread_t newthread;
-  car newCar = {newthread,
-                  Street.managed_cars++,
-                  -1,
-                  Street.carspeeds[type - 1],
-                  (1.0 / Street.carspeeds[type - 1]) * Street.size,
-                  (1.0 / Street.carspeeds[type - 1]) * Street.size,
-                  type,
-                  (Street.thread_scheduling == 4) ? (false) : (true)};
+  car newCar = {newthread, 
+                  Street.managed_cars++, // id
+                  -1, // posicion
+                  Street.carspeeds[type - 1], // velocidad
+                  (1.0 / Street.carspeeds[type - 1]) * Street.size, //tiempo total - inversa de la velocidad (tiempo por unidad) multiplicado por la longitud de la calle
+                  (1.0 / Street.carspeeds[type - 1]) * Street.size, //tiempo restante
+                  type, // tipo de carro
+                  (Street.thread_scheduling == 4) ? (false) : (true)}; // permiso
 
   if (right) {
     if (right_street.capacity == right_street.maxcapacity) {
@@ -351,7 +351,7 @@ void *carmover(void *arg) {
     // La velocidad se refleja en el delay
     usleep(delay);
     if ((position == Street.size - 1) &&
-        (Street.direction)) {  // El barco debe salir por la derecha
+        (Street.direction)) {  // El carro debe salir por la derecha
       CEmutex_lock(&street_mutex);
       Street.street[Street.size - 1] = emptycar;
       Street.cars_in--;
@@ -359,7 +359,7 @@ void *carmover(void *arg) {
       streetcontent();
       break;
     } else if ((position == 0) &&
-               (!Street.direction)) {  // El barco debe salir por la izquierda
+               (!Street.direction)) {  // El carro debe salir por la izquierda
       CEmutex_lock(&street_mutex);
       Street.street[0] = emptycar;
       Street.cars_in--;
@@ -367,20 +367,20 @@ void *carmover(void *arg) {
       streetcontent();
       break;
     } else if (Street.street[position + 1].ID != -1 &&
-               Street.direction) {  // Hay un barco ocupando el lugar
+               Street.direction) {  // Hay un carro ocupando el lugar
       if (Street.thread_scheduling ==
           5) {  // Si se esta en tiempo real no cumple con el deadline
         Street.TiempoReal = false;
       }
       continue;
     } else if (Street.street[position - 1].ID != -1 &&
-               (!Street.direction)) {  // Hay un barco ocupando el lugar
+               (!Street.direction)) {  // Hay un carro ocupando el lugar
       if (Street.thread_scheduling ==
           5) {  // Si se esta en tiempo real no cumple con el deadline
         Street.TiempoReal = false;
       }
       continue;
-    } else {  // el barco se mueve
+    } else {  // el carro se mueve
       car2move = Street.street[position];
       if (car2move.Permission) {
         CEmutex_lock(&street_mutex);
@@ -454,8 +454,8 @@ void CarGUI() {
         "    a:    🚗 Carro normal\n"
         "    b:    🏎️  Carro deportivo\n"
         "    c:    🚨 Carro emergencia\n\n"
-        "    r:    ⏩ Agregar barco a la derecha\n"
-        "    l:    ⏪ Agregar barco a la izquierda\n\n"
+        "    r:    ⏩ Agregar carro a la derecha\n"
+        "    l:    ⏪ Agregar carro a la izquierda\n\n"
         "    q: ❌ Cerrar el server\n"
         "Ingrese su elección: ");
   scanf("%99s", respuesta);
@@ -485,7 +485,7 @@ void CarGUI() {
       cartype = 3;  // Cambiar a carro emergencia
     } else if (strcmp(respuesta, "r") == 0) {
       CEmutex_lock(&street_mutex);
-      addcardummy(true, cartype);  // Agregar barco a la derecha
+      addcardummy(true, cartype);  // Agregar carro a la derecha
       Street.TiempoReal = scheduler(Street.thread_scheduling, right_street.waiting,
                                   right_street.capacity, GetSlowestCar());
       if (Street.thread_scheduling) {
@@ -496,7 +496,7 @@ void CarGUI() {
       CEmutex_unlock(&street_mutex);
     } else if (strcmp(respuesta, "l") == 0) {
       CEmutex_lock(&street_mutex);
-      addcardummy(false, cartype);  // Agregar barco a la izquierda
+      addcardummy(false, cartype);  // Agregar carro a la izquierda
       Street.TiempoReal = scheduler(Street.thread_scheduling, left_street.waiting,
                                   left_street.capacity, GetSlowestCar());
       if (Street.thread_scheduling) {
@@ -540,7 +540,7 @@ void *Street_Schedule(void *arg) {
     }
     if (Street.street_scheduling == 1) {  // W
       if (w == Street.W) {
-        YellowStreet();  // Esperar a que los barcos crucen
+        YellowStreet();  // Esperar a que los carros crucen
         w = 0;
         Street.direction = !Street.direction;
       } else {  // No se han cumplido los tiempos
@@ -641,21 +641,21 @@ car GetEnterCar(int index, bool queue) {
     car newCar = right_street.waiting[index];
     for (int i = index + 1; i < right_street.capacity; i++) {
       right_street.waiting[i - 1] =
-          right_street.waiting[i];  // Corrimiento de los barcos en espera
+          right_street.waiting[i];  // Corrimiento de los carros en espera
     }
     right_street.capacity--;
     right_street.waiting[right_street.capacity] =
-        emptycar;  // Borrado del ultimo barco
+        emptycar;  // Borrado del ultimo carro
     return newCar;
   } else {
     car newCar = left_street.waiting[index];
     for (int i = index + 1; i < left_street.capacity; i++) {
       left_street.waiting[i - 1] =
-          left_street.waiting[i];  // Corrimiento de los barcos en espera
+          left_street.waiting[i];  // Corrimiento de los carros en espera
     }
     left_street.capacity--;
     left_street.waiting[left_street.capacity] = emptycar;  // Borrado del ultimo
-                                                      // barco
+                                                      // carro
     return newCar;
   }
 }
@@ -683,15 +683,15 @@ void Street_RR() {
   int firstcar = -1;
   int Quantumended = Street.size;  // Me aseguro de minimo recorrer todo el street
   for (int i = 0; i < Street.size; i++) {
-    if (Street.street[i].ID == -1) {  // No se toman en cuenta barcos nulos
+    if (Street.street[i].ID == -1) {  // No se toman en cuenta carros nulos
       continue;
     }
-    if (firstcar == -1) {  // Se toma nota del primer barco por si acaso se dio
+    if (firstcar == -1) {  // Se toma nota del primer carro por si acaso se dio
                             // vuelta al street de permisos
       firstcar = i;
     }
     if (Street.street[i].ID ==
-        Street.RRID) {  // Es el barco que se le acabo el quantum
+        Street.RRID) {  // Es el carro que se le acabo el quantum
       // printf("Quantum ended for %d in position %d\n", Street.RRID, i);
       Street.street[i].Permission = false;
       Quantumended = i;
@@ -716,21 +716,20 @@ void Street_RR() {
 
 void CheckRealTime() {
   if (Street.thread_scheduling ==
-      5) {  // Para tiempo real hay que verificar que no tenga barcos esperando
-            // por direccion
+      5) {  
     if (Street.Yellowlight) {
       if (right_street.capacity != 0 || left_street.capacity != 0) {
         Street.TiempoReal = false;
       }
     }
-    if (Street.direction) {  //->
+    if (Street.direction) {  
       if (right_street.capacity !=
-          0) {  // No cumple, ay barcos esperando por cambio de direccion
+          0) {  
         Street.TiempoReal = false;
       }
-    } else {  //<-
+    } else {  
       if (left_street.capacity !=
-          0) {  // No cumple, ay barcos esperando por cambio de direccion
+          0) {  
         Street.TiempoReal = false;
       }
     }

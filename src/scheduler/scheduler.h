@@ -9,7 +9,7 @@
 
 #include "../lib/CEthreads.h"
 
-#define QUANTUM_mSEC 7000
+#define QUANTUM_mSEC 6000
 
 typedef struct {
   CEthread_t thread;

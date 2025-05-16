@@ -37,9 +37,9 @@ typedef struct {
   int time;
   int carspeeds[3];
 
-  int street_scheduling;  // 1 igual
-                         // 2 semaforo
-                         // 3 tico
+  int street_scheduling;  // 1 EQUIDAD
+                         // 2 LETRERO
+                         // 3 FIFO
 
   int thread_scheduling;  // 1 FCFS
                           // 2 SJF
