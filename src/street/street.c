@@ -558,23 +558,52 @@ void *Street_Schedule(void *arg) {
         EnterStreet(0, !Street.direction);
       }
     } else if (Street.street_scheduling == 3) {  // Modo FIFO
-      if (Street.direction) {
-        if (left_street.capacity == 0) {
-          YellowStreet();
-          Street.direction = !Street.direction;
-        } else {
-          CheckRealTime();
-          EnterStreet(0, !Street.direction);
+      // Determinar si hay vehículos esperando
+    if (left_street.capacity == 0 && right_street.capacity == 0) {
+        // No hay vehículos esperando, no hacemos nada
+        usleep(1000);
+    } else if (left_street.capacity > 0 && right_street.capacity == 0) {
+        // Solo hay vehículos en la izquierda
+        if (Street.direction) {  // Ya estamos en dirección derecha (->), los vehículos entran desde la izquierda
+            CheckRealTime();
+            EnterStreet(0, false);  // false para left_street
+        } else {  // Necesitamos cambiar a dirección derecha
+            YellowStreet();
+            Street.direction = true;  // Cambiar a dirección derecha (->)
         }
-      } else {
-        if (right_street.capacity == 0) {
-          YellowStreet();
-          Street.direction = !Street.direction;
-        } else {
-          CheckRealTime();
-          EnterStreet(0, !Street.direction);
+    } else if (right_street.capacity > 0 && left_street.capacity == 0) {
+        // Solo hay vehículos en la derecha
+        if (!Street.direction) {  // Ya estamos en dirección izquierda (<-), los vehículos entran desde la derecha
+            CheckRealTime();
+            EnterStreet(0, true);  // true para right_street
+        } else {  // Necesitamos cambiar a dirección izquierda
+            YellowStreet();
+            Street.direction = false;  // Cambiar a dirección izquierda (<-)
         }
-      }
+    } else {
+        // Hay vehículos en ambas direcciones, aplicar FIFO
+        // Como alternativa simplificada, usamos los IDs para aproximar el orden de llegada
+        int left_id = left_street.waiting[0].ID;
+        int right_id = right_street.waiting[0].ID;
+        
+        if (left_id < right_id) {  // El de la izquierda llegó primero
+            if (Street.direction) {  // Ya estamos en dirección derecha (->)
+                CheckRealTime();
+                EnterStreet(0, false);  // false para left_street
+            } else {  // Necesitamos cambiar a dirección derecha
+                YellowStreet();
+                Street.direction = true;  // Cambiar a dirección derecha (->)
+            }
+        } else {  // El de la derecha llegó primero
+            if (!Street.direction) {  // Ya estamos en dirección izquierda (<-)
+                CheckRealTime();
+                EnterStreet(0, true);  // true para right_street
+            } else {  // Necesitamos cambiar a dirección izquierda
+                YellowStreet();
+                Street.direction = false;  // Cambiar a dirección izquierda (<-)
+            }
+        }
+    }
     } else {
       printf("Error en la seleccion de scheduler\n");
       Street.running = false;
